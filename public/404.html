@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>إعادة التوجيه...</title>
+    <script>
+      // Get the pathname and redirect to the correct base path
+      const path = window.location.pathname;
+      const basePath = '/media-page';
+      
+      // If we're not already on the base path, redirect
+      if (!path.startsWith(basePath)) {
+        // Extract the path after the domain
+        const currentPath = path.replace(/^\/+/, '');
+        const redirectPath = basePath + (currentPath && currentPath !== '404.html' ? '/' + currentPath : '/');
+        window.location.replace(redirectPath);
+      } else {
+        // If already on base path, just go to index
+        window.location.replace(basePath + '/');
+      }
+    </script>
+  </head>
+  <body>
+    <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+      <p>جاري إعادة التوجيه...</p>
+    </div>
+  </body>
+</html>
