@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { login, isAuthenticated } from '../utils/auth'
 
 function LoginPage() {
@@ -78,12 +78,12 @@ function LoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
           >
             ← العودة إلى الصفحة الرئيسية
-          </a>
+          </Link>
         </div>
       </div>
     </div>
