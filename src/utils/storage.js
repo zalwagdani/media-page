@@ -3,15 +3,15 @@
 export const getProfile = () => {
   const profile = localStorage.getItem('profile')
   return profile ? JSON.parse(profile) : {
-    name: 'اسمك',
-    picture: '',
+    name: 'سلم ال عباس',
+    picture: 'https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/3dec0101691471a65ccd646a6f6c8f67~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=344a058b&x-expires=1766318400&x-signature=uml1wuDHXwLdorbeELuiZTZXxA4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
     socialMedia: {
       twitter: '',
-      instagram: '',
+      instagram: 'google.com',
       linkedin: '',
       github: '',
-      tiktok: '',
-      snapchat: '',
+      tiktok: 'google.com',
+      snapchat: 'google.com',
       youtube: ''
     }
   }
