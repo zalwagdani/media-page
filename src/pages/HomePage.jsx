@@ -332,24 +332,35 @@ function HomePage() {
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300 ${
                     isDarkMode ? 'bg-gradient-to-br from-purple-400 to-pink-400' : 'bg-gradient-to-br from-pink-300 to-blue-300'
                   }`}></div>
-                  <img 
-                    src={profile.picture} 
+                  <img
+                    src={profile.picture}
                     alt={profile.name}
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    loading="eager"
                     className={`relative w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full object-cover border-4 shadow-2xl ring-4 transition-all duration-300 transform group-hover:rotate-3 ${
-                      isDarkMode 
-                        ? 'border-purple-400 ring-purple-900/50' 
+                      isDarkMode
+                        ? 'border-purple-400 ring-purple-900/50'
                         : 'border-pink-400 ring-pink-100'
                     }`}
                     onError={(e) => {
                       // If image fails to load, show fallback
-                      e.target.style.display = 'none'
-                      e.target.nextElementSibling.style.display = 'flex'
+                      console.log('Image failed to load:', profile.picture)
+                      const img = e.target
+                      const fallback = img.nextElementSibling
+                      if (img && fallback) {
+                        img.style.display = 'none'
+                        fallback.style.display = 'flex'
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('Image loaded successfully:', profile.picture)
                     }}
                   />
-                  <div 
-                    className={`w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 hidden transition-all duration-300 ${
-                      isDarkMode 
-                        ? 'border-purple-400 ring-purple-900/50' 
+                  <div
+                    className={`absolute top-0 left-0 w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 hidden transition-all duration-300 ${
+                      isDarkMode
+                        ? 'border-purple-400 ring-purple-900/50'
                         : 'border-pink-400 ring-pink-100'
                     }`}
                   >
@@ -358,8 +369,8 @@ function HomePage() {
                 </div>
               ) : (
                 <div className={`relative group w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 transition-all duration-300 transform hover:scale-110 ${
-                  isDarkMode 
-                    ? 'border-purple-400 ring-purple-900/50' 
+                  isDarkMode
+                    ? 'border-purple-400 ring-purple-900/50'
                     : 'border-pink-400 ring-pink-100'
                 }`}>
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-50 ${
