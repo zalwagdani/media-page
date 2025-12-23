@@ -29,6 +29,8 @@ function HomePage() {
   const [codes, setCodes] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCodes, setFilteredCodes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   // Dark mode state - default to true (dark mode)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
@@ -37,44 +39,88 @@ function HomePage() {
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true)
+      setError(null)
+      
       try {
         // Use route param if available, otherwise detect from URL
         const currentPageId = routePageId || getPageId()
         console.log('Loading data for page ID:', currentPageId)
         console.log('Current URL:', window.location.pathname)
+        console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Configured' : 'NOT CONFIGURED')
         
-        const [profileResult, codesResult] = await Promise.all([
-          getProfile(currentPageId),
-          getCodes(currentPageId)
-        ])
-        
-        console.log('Profile result:', profileResult)
-        console.log('Codes result:', codesResult)
-        
-        if (profileResult.error) {
-          console.error('Profile error:', profileResult.error)
-          // Still set default profile if there's an error
-          if (profileResult.data) {
-            setProfile(profileResult.data)
+        // Set default profile immediately to prevent white screen
+        const defaultProfile = {
+          name: 'سلم ال عباس',
+          picture: 'https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/3dec0101691471a65ccd646a6f6c8f67~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=344a058b&x-expires=1766318400&x-signature=uml1wuDHXwLdorbeELuiZTZXxA4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
+          socialMedia: {
+            twitter: '',
+            instagram: 'google.com',
+            linkedin: '',
+            github: '',
+            tiktok: 'google.com',
+            snapchat: 'google.com',
+            youtube: ''
           }
-        } else if (profileResult.data) {
-          setProfile(profileResult.data)
         }
         
-        if (codesResult.error) {
-          console.error('Codes error:', codesResult.error)
-          // Set empty array if error
+        // Check if Supabase is configured
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+        
+        if (!supabaseUrl || !supabaseKey || supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+          console.warn('⚠️ Supabase not configured, using default profile')
+          setProfile(defaultProfile)
           setCodes([])
           setFilteredCodes([])
-        } else if (codesResult.data) {
-          setCodes(codesResult.data)
-          setFilteredCodes(codesResult.data)
-        } else {
+          setLoading(false)
+          return
+        }
+        
+        try {
+          const [profileResult, codesResult] = await Promise.all([
+            getProfile(currentPageId),
+            getCodes(currentPageId)
+          ])
+          
+          console.log('Profile result:', profileResult)
+          console.log('Codes result:', codesResult)
+          
+          if (profileResult.error) {
+            console.error('Profile error:', profileResult.error)
+            // Use default profile if there's an error
+            if (profileResult.data) {
+              setProfile(profileResult.data)
+            } else {
+              setProfile(defaultProfile)
+            }
+          } else if (profileResult.data) {
+            setProfile(profileResult.data)
+          } else {
+            setProfile(defaultProfile)
+          }
+          
+          if (codesResult.error) {
+            console.error('Codes error:', codesResult.error)
+            setCodes([])
+            setFilteredCodes([])
+          } else if (codesResult.data) {
+            setCodes(codesResult.data)
+            setFilteredCodes(codesResult.data)
+          } else {
+            setCodes([])
+            setFilteredCodes([])
+          }
+        } catch (apiError) {
+          console.error('API error:', apiError)
+          // Use default profile on API error
+          setProfile(defaultProfile)
           setCodes([])
           setFilteredCodes([])
         }
       } catch (error) {
         console.error('Error loading data:', error)
+        setError(error.message)
         // Set default profile on error so page doesn't stay white
         setProfile({
           name: 'سلم ال عباس',
@@ -91,6 +137,8 @@ function HomePage() {
         })
         setCodes([])
         setFilteredCodes([])
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -121,6 +169,51 @@ function HomePage() {
     setIsDarkMode(!isDarkMode)
   }
 
+  // Show loading state only if we don't have a profile yet
+  if (loading && !profile) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
+        <div className="text-center">
+          <div className="text-6xl sm:text-7xl mb-6 animate-bounce">✨</div>
+          <div className={`text-xl sm:text-2xl font-bold mb-3 transition-colors duration-300 bg-gradient-to-r ${
+            isDarkMode 
+              ? 'text-transparent bg-clip-text from-purple-300 to-pink-300' 
+              : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
+          }`}>جاري التحميل...</div>
+          <div className={`text-base sm:text-lg transition-colors duration-300 ${isDarkMode ? 'text-purple-200' : 'text-purple-600'}`}>يرجى الانتظار قليلاً 🎈</div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error message if there's an error and no profile
+  if (error && !profile) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl sm:text-7xl mb-6">⚠️</div>
+          <div className={`text-xl sm:text-2xl font-bold mb-3 transition-colors duration-300 ${
+            isDarkMode ? 'text-red-300' : 'text-red-600'
+          }`}>حدث خطأ</div>
+          <div className={`text-base sm:text-lg transition-colors duration-300 mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {error}
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            className={`px-6 py-3 rounded-2xl font-semibold transition-all duration-300 ${
+              isDarkMode
+                ? 'bg-purple-600 hover:bg-purple-500 text-white'
+                : 'bg-pink-500 hover:bg-pink-400 text-white'
+            }`}
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // If there's no profile after loading, use fallback (shouldn't happen due to useEffect)
   if (!profile) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
