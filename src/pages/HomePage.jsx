@@ -74,6 +74,7 @@ function HomePage() {
   const [filteredCodes, setFilteredCodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [imageLoadError, setImageLoadError] = useState(false)
   // Dark mode state - default to true (dark mode)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
@@ -84,6 +85,7 @@ function HomePage() {
     const loadData = async () => {
       setLoading(true)
       setError(null)
+      setImageLoadError(false)
       
       try {
         // Use route param if available, otherwise detect from URL
@@ -327,8 +329,8 @@ function HomePage() {
           <div className="flex flex-col items-center text-center">
             {/* Profile Picture - Large and Circular with Friendly Animation */}
             <div className="mb-8 sm:mb-10 transform hover:scale-105 transition-transform duration-300">
-              {profile.picture ? (
-                <div className="relative group">
+              {profile.picture && !imageLoadError ? (
+                <div className="relative group w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56">
                   <div className={`absolute inset-0 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300 ${
                     isDarkMode ? 'bg-gradient-to-br from-purple-400 to-pink-400' : 'bg-gradient-to-br from-pink-300 to-blue-300'
                   }`}></div>
@@ -338,34 +340,20 @@ function HomePage() {
                     crossOrigin="anonymous"
                     referrerPolicy="no-referrer"
                     loading="eager"
-                    className={`relative w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full object-cover border-4 shadow-2xl ring-4 transition-all duration-300 transform group-hover:rotate-3 ${
+                    className={`relative w-full h-full rounded-full object-cover border-4 shadow-2xl ring-4 transition-all duration-300 transform group-hover:rotate-3 ${
                       isDarkMode
                         ? 'border-purple-400 ring-purple-900/50'
                         : 'border-pink-400 ring-pink-100'
                     }`}
-                    onError={(e) => {
-                      // If image fails to load, show fallback
+                    onError={() => {
                       console.log('Image failed to load:', profile.picture)
-                      const img = e.target
-                      const fallback = img.nextElementSibling
-                      if (img && fallback) {
-                        img.style.display = 'none'
-                        fallback.style.display = 'flex'
-                      }
+                      setImageLoadError(true)
                     }}
                     onLoad={() => {
                       console.log('Image loaded successfully:', profile.picture)
+                      setImageLoadError(false)
                     }}
                   />
-                  <div
-                    className={`absolute top-0 left-0 w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 hidden transition-all duration-300 ${
-                      isDarkMode
-                        ? 'border-purple-400 ring-purple-900/50'
-                        : 'border-pink-400 ring-pink-100'
-                    }`}
-                  >
-                    {profile.name.charAt(0)}
-                  </div>
                 </div>
               ) : (
                 <div className={`relative group w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 transition-all duration-300 transform hover:scale-110 ${
