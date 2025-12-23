@@ -1,38 +1,57 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { login, isAuthenticated } from '../utils/auth'
+import { useNavigate, useLocation, Link, useParams } from 'react-router-dom'
+import { isAdminAuthenticated, authenticateAdmin } from '../services/api'
+import { getPageId } from '../config/supabase'
 
 function LoginPage() {
+  const { pageId: routePageId } = useParams()
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
 
+  // Get current page ID
+  const currentPageId = routePageId || getPageId()
+
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate('/admin', { replace: true })
+    if (isAdminAuthenticated()) {
+      const adminPageId = sessionStorage.getItem('admin_page_id')
+      if (adminPageId === currentPageId) {
+        // Redirect to admin page for current page
+        const adminPath = routePageId ? `/page/${routePageId}/admin` : '/admin'
+        navigate(adminPath, { replace: true })
+      }
     }
-  }, [navigate])
+  }, [navigate, currentPageId, routePageId])
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    // Simulate a small delay for better UX
-    setTimeout(() => {
-      if (login(password)) {
-        // Redirect to admin page or the page they were trying to access
-        const from = location.state?.from?.pathname || '/admin'
+    try {
+      console.log('Attempting login for page:', currentPageId)
+      const result = await authenticateAdmin(email, password, currentPageId)
+      
+      if (result.success) {
+        // Redirect to admin page for the current page
+        const adminPath = routePageId ? `/page/${routePageId}/admin` : '/admin'
+        const from = location.state?.from?.pathname || adminPath
         navigate(from, { replace: true })
       } else {
-        setError('كلمة المرور غير صحيحة')
+        setError(result.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة')
         setPassword('')
         setLoading(false)
       }
-    }, 300)
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.')
+      setPassword('')
+      setLoading(false)
+    }
   }
 
   return (
@@ -40,10 +59,31 @@ function LoginPage() {
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">تسجيل الدخول</h1>
-          <p className="text-gray-600 text-sm">أدخل كلمة المرور للوصول إلى لوحة التحكم</p>
+          <p className="text-gray-600 text-sm">أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة التحكم</p>
+          {currentPageId && currentPageId !== 'default' && (
+            <p className="text-gray-500 text-xs mt-2">الصفحة: {currentPageId}</p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              البريد الإلكتروني
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setError('')
+              }}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-base"
+              placeholder="أدخل بريدك الإلكتروني"
+              autoFocus
+              required
+            />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               كلمة المرور
@@ -57,7 +97,6 @@ function LoginPage() {
               }}
               className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-base"
               placeholder="أدخل كلمة المرور"
-              autoFocus
               required
             />
           </div>

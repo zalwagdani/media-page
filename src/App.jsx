@@ -9,9 +9,19 @@ function App() {
     <Router basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/page/:pageId" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/page/:pageId/login" element={<LoginPage />} />
         <Route 
           path="/admin" 
+          element={
+            <ProtectedRoute>
+              <AdminPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/page/:pageId/admin" 
           element={
             <ProtectedRoute>
               <AdminPage />

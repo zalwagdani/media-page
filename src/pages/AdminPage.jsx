@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode } from '../utils/storage'
-import { logout } from '../utils/auth'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode } from '../services/api'
+import { logoutAdmin, isAdminAuthenticated } from '../services/api'
+import { getPageId } from '../config/supabase'
 
 function AdminPage() {
+  const { pageId: routePageId } = useParams()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('profile') // 'profile' or 'codes'
+  
+  // Get current page ID
+  const currentPageId = routePageId || getPageId()
   const [profile, setProfile] = useState({
     name: '',
     picture: '',
@@ -28,12 +33,69 @@ function AdminPage() {
     tags: ''
   })
 
+  const [isDefaultData, setIsDefaultData] = useState(false)
+  const [loading, setLoading] = useState(true)
+
   useEffect(() => {
-    const profileData = getProfile()
-    const codesData = getCodes()
-    setProfile(profileData)
-    setCodes(codesData)
-  }, [])
+    // Check authentication
+    if (!isAdminAuthenticated()) {
+      navigate('/login', { replace: true })
+      return
+    }
+
+    // Load data
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        console.log('Loading data for page ID:', currentPageId)
+        
+        const [profileResult, codesResult] = await Promise.all([
+          getProfile(currentPageId),
+          getCodes(currentPageId)
+        ])
+        
+        console.log('Profile result:', profileResult)
+        console.log('Codes result:', codesResult)
+        
+        if (profileResult.data) {
+          // Ensure socialMedia object exists with all platforms
+          const profileData = {
+            ...profileResult.data,
+            socialMedia: {
+              twitter: '',
+              instagram: '',
+              linkedin: '',
+              github: '',
+              tiktok: '',
+              snapchat: '',
+              youtube: '',
+              ...(profileResult.data.socialMedia || {})
+            }
+          }
+          setProfile(profileData)
+          setIsDefaultData(profileResult.isDefault || profileResult.data._isDefault || false)
+          
+          if (profileResult.isDefault || profileResult.data._isDefault) {
+            console.warn('⚠️ Showing default data - no profile found in database for page:', currentPageId)
+            console.warn('💡 Save the profile to create it in the database')
+          } else {
+            console.log('✅ Profile loaded from database')
+          }
+        }
+        
+        if (codesResult.data) {
+          setCodes(codesResult.data)
+        }
+      } catch (error) {
+        console.error('Error loading data:', error)
+        alert('حدث خطأ أثناء تحميل البيانات')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [navigate, currentPageId])
 
   const handleProfileChange = (field, value) => {
     if (field.startsWith('social.')) {
@@ -53,35 +115,79 @@ function AdminPage() {
     }
   }
 
-  const saveProfileData = () => {
-    saveProfile(profile)
-    alert('تم حفظ الملف الشخصي بنجاح!')
+  const saveProfileData = async () => {
+    try {
+      console.log('Saving profile for page:', currentPageId)
+      console.log('Profile data:', profile)
+      const result = await saveProfile(profile, currentPageId)
+      
+      if (result.error) {
+        const errorMessage = result.error.userMessage || result.error.message || 'حدث خطأ غير معروف'
+        alert('حدث خطأ أثناء حفظ الملف الشخصي: ' + errorMessage)
+        console.error('Profile save error:', result.error)
+      } else {
+        console.log('✅ Profile saved successfully:', result.data)
+        alert('تم حفظ الملف الشخصي بنجاح!')
+        
+        // Reload data to get the saved profile from database
+        const profileResult = await getProfile(currentPageId)
+        if (profileResult.data) {
+          setProfile(profileResult.data)
+          setIsDefaultData(profileResult.isDefault || false)
+          console.log('✅ Profile reloaded from database')
+        }
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      alert('حدث خطأ أثناء حفظ الملف الشخصي: ' + (error.message || 'خطأ غير معروف'))
+    }
   }
 
-  const handleCodeSubmit = (e) => {
+  const handleCodeSubmit = async (e) => {
     e.preventDefault()
     const tagsArray = codeForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
     
-    if (editingCode) {
-      updateCode(editingCode.id, {
-        title: codeForm.title,
-        description: codeForm.description,
-        discountCode: codeForm.discountCode,
-        tags: tagsArray
-      })
-      setEditingCode(null)
-    } else {
-      addCode({
-        title: codeForm.title,
-        description: codeForm.description,
-        discountCode: codeForm.discountCode,
-        tags: tagsArray
-      })
+    try {
+      if (editingCode) {
+        const result = await updateCode(editingCode.id, {
+          title: codeForm.title,
+          description: codeForm.description,
+          discountCode: codeForm.discountCode,
+          tags: tagsArray
+        }, currentPageId)
+        
+        if (result.error) {
+          alert('حدث خطأ أثناء تحديث كود الخصم: ' + result.error.message)
+          return
+        }
+        
+        setEditingCode(null)
+      } else {
+        const result = await addCode({
+          title: codeForm.title,
+          description: codeForm.description,
+          discountCode: codeForm.discountCode,
+          tags: tagsArray
+        }, currentPageId)
+        
+        if (result.error) {
+          alert('حدث خطأ أثناء إضافة كود الخصم: ' + result.error.message)
+          return
+        }
+      }
+      
+        // Reload codes
+        const codesResult = await getCodes(currentPageId)
+        if (codesResult.data) {
+          setCodes(codesResult.data)
+        }
+        
+        setCodeForm({ title: '', description: '', discountCode: '', tags: '' })
+        alert(editingCode ? 'تم تحديث كود الخصم بنجاح!' : 'تم إضافة كود الخصم بنجاح!')
+    } catch (error) {
+      console.error('Error saving code:', error)
+      alert('حدث خطأ أثناء حفظ كود الخصم')
     }
-    
-    setCodes(getCodes())
-    setCodeForm({ title: '', description: '', discountCode: '', tags: '' })
-    alert(editingCode ? 'تم تحديث كود الخصم بنجاح!' : 'تم إضافة كود الخصم بنجاح!')
   }
 
   const handleEditCode = (code) => {
@@ -94,13 +200,31 @@ function AdminPage() {
     })
   }
 
-  const handleDeleteCode = (id) => {
+  const handleDeleteCode = async (id) => {
     if (window.confirm('هل أنت متأكد من حذف كود الخصم هذا؟')) {
-      deleteCode(id)
-      setCodes(getCodes())
-      if (editingCode && editingCode.id === id) {
-        setEditingCode(null)
-        setCodeForm({ title: '', description: '', discountCode: '', tags: '' })
+      try {
+        const result = await deleteCode(id, currentPageId)
+        
+        if (result.error) {
+          alert('حدث خطأ أثناء حذف كود الخصم: ' + result.error.message)
+          return
+        }
+        
+        // Reload codes
+        const codesResult = await getCodes(currentPageId)
+        if (codesResult.data) {
+          setCodes(codesResult.data)
+        }
+        
+        if (editingCode && editingCode.id === id) {
+          setEditingCode(null)
+          setCodeForm({ title: '', description: '', discountCode: '', tags: '' })
+        }
+        
+        alert('تم حذف كود الخصم بنجاح!')
+      } catch (error) {
+        console.error('Error deleting code:', error)
+        alert('حدث خطأ أثناء حذف كود الخصم')
       }
     }
   }
@@ -126,7 +250,7 @@ function AdminPage() {
             <button
               onClick={() => {
                 if (window.confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-                  logout()
+                  logoutAdmin()
                   window.location.href = '/login'
                 }
               }}
@@ -165,6 +289,26 @@ function AdminPage() {
         {activeTab === 'profile' && (
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">تعديل الملف الشخصي</h2>
+            
+            {isDefaultData && (
+              <div className="mb-4 sm:mb-6 bg-yellow-50 border-2 border-yellow-300 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">⚠️</span>
+                  <div>
+                    <p className="text-yellow-800 font-medium text-sm sm:text-base mb-1">
+                      البيانات الافتراضية
+                    </p>
+                    <p className="text-yellow-700 text-xs sm:text-sm">
+                      لا يوجد ملف شخصي محفوظ في قاعدة البيانات لهذه الصفحة. البيانات المعروضة هي بيانات افتراضية. احفظ الملف الشخصي لحفظه في قاعدة البيانات.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {loading && (
+              <div className="mb-4 text-center text-gray-600">جاري التحميل...</div>
+            )}
             
             <div className="space-y-4 sm:space-y-6">
               <div>
@@ -209,7 +353,10 @@ function AdminPage() {
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">روابط وسائل التواصل الاجتماعي</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  {Object.keys(profile.socialMedia).map((platform) => {
+                  {(() => {
+                    // Ensure socialMedia exists and has all platforms
+                    const socialMedia = profile.socialMedia || {}
+                    const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube']
                     const platformNames = {
                       twitter: 'تويتر',
                       instagram: 'إنستغرام',
@@ -219,21 +366,22 @@ function AdminPage() {
                       snapchat: 'سناب شات',
                       youtube: 'يوتيوب'
                     }
-                    return (
+                    
+                    return platforms.map((platform) => (
                       <div key={platform}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {platformNames[platform] || platform}
                         </label>
                         <input
                           type="url"
-                          value={profile.socialMedia[platform]}
+                          value={socialMedia[platform] || ''}
                           onChange={(e) => handleProfileChange(`social.${platform}`, e.target.value)}
                           className="w-full px-3 sm:px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                           placeholder={`https://${platform}.com/yourusername`}
                         />
                       </div>
-                    )
-                  })}
+                    ))
+                  })()}
                 </div>
               </div>
 

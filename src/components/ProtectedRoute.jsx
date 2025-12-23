@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { isAuthenticated } from '../utils/auth'
+import { isAdminAuthenticated } from '../services/api'
 
 function ProtectedRoute({ children }) {
   const navigate = useNavigate()
@@ -8,7 +8,7 @@ function ProtectedRoute({ children }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      if (!isAuthenticated()) {
+      if (!isAdminAuthenticated()) {
         // Redirect to login page, and save where they were trying to go
         navigate('/login', { 
           replace: true,
@@ -23,7 +23,7 @@ function ProtectedRoute({ children }) {
   }, [navigate])
 
   // Show loading or nothing while checking
-  if (isChecking || !isAuthenticated()) {
+  if (isChecking || !isAdminAuthenticated()) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-600">جاري التحميل...</div>

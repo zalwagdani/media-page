@@ -1,121 +1,164 @@
-# استكشاف الأخطاء - الموقع غير ظاهر / Troubleshooting - Site Not Visible
+# Troubleshooting Guide
 
-## ✅ التحقق من الخطوات / Check These Steps:
+## White Page Issue
 
-### 1. هل تم رفع الكود إلى GitHub؟ / Did you push the code?
+If you're seeing a white page, check the following:
 
-تحقق من أن الكود موجود على GitHub:
-- اذهب إلى: https://github.com/zalwagdani/Media
-- يجب أن ترى الملفات (src/, package.json, etc.)
+### 1. Check Browser Console
 
-**إذا لم يكن موجوداً، ارفع الكود:**
-```bash
-cd "/Users/zalwagdani/Media Page"
-git push -u origin main
+Open your browser's Developer Tools (F12) and check the Console tab for errors:
+
+- **"Invalid API key"** → Supabase credentials not configured
+- **"relation does not exist"** → Database schema not run
+- **"Failed to fetch"** → Network/CORS issue
+- **"permission denied"** → RLS policy issue
+
+### 2. Verify Supabase Configuration
+
+Check that your `.env` file exists and has correct values:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
----
+**Important**: 
+- Restart the dev server after changing `.env`
+- Make sure there are no spaces around the `=` sign
+- Don't use quotes around the values
 
-### 2. هل تم تفعيل GitHub Pages؟ / Is GitHub Pages enabled?
+### 3. Check Page ID Detection
 
-1. اذهب إلى: https://github.com/zalwagdani/Media/settings/pages
-2. تحت "Source":
-   - اختر: **"GitHub Actions"** (ليس "Deploy from a branch")
-   - احفظ
+The system detects page IDs in this order:
 
----
+1. **URL Path**: `/page/slm` → page_id = "slm" ✅
+2. **Subdomain**: `slm.yourapp.com` → page_id = "slm"
+3. **Default**: Uses "default" if neither found
 
-### 3. هل يعمل GitHub Actions؟ / Is GitHub Actions working?
+To access page "slm":
+- Use URL: `http://localhost:5173/page/slm` (or your domain)
+- Or set subdomain: `slm.localhost:5173` (for local dev)
 
-1. اذهب إلى: https://github.com/zalwagdani/Media/actions
-2. يجب أن ترى workflow اسمه "Deploy to GitHub Pages"
-3. إذا كان هناك خطأ (❌)، اضغط عليه لرؤية التفاصيل
+### 4. Verify Database Setup
 
-**مشاكل شائعة:**
-- ❌ "Build failed" → تحقق من package.json
-- ❌ "Permission denied" → تأكد من تفعيل GitHub Pages
-- ⏳ "In progress" → انتظر قليلاً
+1. **Check tables exist**:
+   - Go to Supabase → Table Editor
+   - Verify: `pages`, `admins`, `profiles`, `discount_codes` exist
 
----
+2. **Check page exists**:
+   ```sql
+   SELECT * FROM pages WHERE id = 'slm';
+   ```
+   If empty, create it:
+   ```sql
+   INSERT INTO pages (id, name) VALUES ('slm', 'SLM Page');
+   ```
 
-### 4. هل انتظرت وقتاً كافياً؟ / Did you wait enough?
+3. **Check profile exists** (optional - defaults will be used):
+   ```sql
+   SELECT * FROM profiles WHERE page_id = 'slm';
+   ```
 
-- بعد الرفع الأول: انتظر 2-3 دقائق
-- بعد التحديثات: انتظر 1-2 دقيقة
+### 5. Check RLS Policies
 
----
+Make sure Row Level Security policies allow reading:
 
-### 5. تحقق من الرابط الصحيح / Check the correct URL:
+1. Go to Supabase → Authentication → Policies
+2. Verify `profiles` table has "Profiles are publicly readable" policy
+3. Verify `discount_codes` table has "Discount codes are publicly readable" policy
 
-الرابط يجب أن يكون:
-```
-https://zalwagdani.github.io/Media/
-```
+### 6. Test API Connection
 
-**ملاحظة:** 
-- يجب أن يكون `/Media/` (بحرف M كبير)
-- لا تنس `/` في النهاية
+Open browser console and run:
 
----
+```javascript
+// Check if Supabase is configured
+console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL)
+console.log('Supabase Key:', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20) + '...')
 
-### 6. امسح Cache المتصفح / Clear browser cache:
-
-- اضغط `Ctrl+Shift+R` (Windows/Linux) أو `Cmd+Shift+R` (Mac)
-- أو افتح في نافذة خاصة (Incognito/Private)
-
----
-
-## 🔧 حلول سريعة / Quick Fixes:
-
-### إذا كان الكود لم يُرفع بعد:
-
-```bash
-cd "/Users/zalwagdani/Media Page"
-
-# تحقق من الحالة
-git status
-
-# إذا كان هناك تغييرات غير محفوظة
-git add .
-git commit -m "Update files"
-
-# ارفع الكود
-git push -u origin main
+// Test connection
+import { supabase } from './src/config/supabase'
+supabase.from('pages').select('count').then(console.log)
 ```
 
-### إذا كان GitHub Actions فاشل:
+### 7. Common Issues
 
-1. اذهب إلى: https://github.com/zalwagdani/Media/actions
-2. اضغط على آخر workflow فاشل
-3. اقرأ رسالة الخطأ
-4. أرسل لي الخطأ وسأساعدك
+#### Issue: Page shows "جاري التحميل..." forever
 
-### إذا كان الموقع يظهر صفحة 404:
+**Cause**: API call is failing silently
 
-1. تأكد من أن GitHub Pages مفعل
-2. تأكد من أن workflow نجح (✅)
-3. انتظر 5 دقائق ثم جرب مرة أخرى
-4. تحقق من الرابط: `https://zalwagdani.github.io/Media/`
+**Solution**:
+1. Check browser console for errors
+2. Verify Supabase credentials
+3. Check network tab for failed requests
+4. Verify database tables exist
 
----
+#### Issue: "Invalid API key" error
 
-## 📋 قائمة التحقق / Checklist:
+**Cause**: Wrong or missing Supabase credentials
 
-- [ ] الكود موجود على GitHub
-- [ ] GitHub Pages مفعل (Settings → Pages → Source: GitHub Actions)
-- [ ] GitHub Actions workflow نجح (✅)
-- [ ] انتظرت 2-3 دقائق بعد النشر
-- [ ] جربت الرابط: `https://zalwagdani.github.io/Media/`
-- [ ] امسحت cache المتصفح
-- [ ] جربت في نافذة خاصة
+**Solution**:
+1. Double-check `.env` file values
+2. Restart dev server: `npm run dev`
+3. Verify credentials in Supabase Settings → API
 
----
+#### Issue: Page works but shows default data
 
-## 🆘 إذا لم يعمل بعد / If still not working:
+**Cause**: No profile/codes created for this page yet
 
-أرسل لي:
-1. رابط المستودع: https://github.com/zalwagdani/Media
-2. لقطة شاشة من GitHub Actions (إذا كان هناك خطأ)
-3. لقطة شاشة من Settings → Pages
+**Solution**:
+1. Log in to admin: `/page/slm/login`
+2. Create admin user for page "slm"
+3. Add profile and codes through admin panel
 
-سأساعدك في حل المشكلة!
+#### Issue: Can't access `/page/slm`
+
+**Cause**: Route not configured (should be fixed now)
+
+**Solution**:
+- Make sure you're using the latest code
+- Routes should include `/page/:pageId`
+
+### 8. Debug Steps
+
+1. **Check page ID detection**:
+   ```javascript
+   // In browser console
+   window.location.pathname
+   // Should show: "/page/slm" or "/page/slm/"
+   ```
+
+2. **Check what page ID is detected**:
+   ```javascript
+   // Add to HomePage.jsx temporarily
+   console.log('Detected page ID:', getPageId())
+   ```
+
+3. **Check API responses**:
+   - Open Network tab in DevTools
+   - Look for requests to Supabase
+   - Check response status and body
+
+### 9. Quick Fix: Use Default Page
+
+If you just want to test, use the default page:
+
+1. Access: `http://localhost:5173/` (no `/page/` prefix)
+2. This uses page_id = "default"
+3. Make sure you have data for "default" page
+
+### 10. Still Not Working?
+
+1. **Clear browser cache**: Ctrl+Shift+Delete (or Cmd+Shift+Delete)
+2. **Check for JavaScript errors**: Look in Console tab
+3. **Verify React Router**: Make sure routes are working
+4. **Test with default page**: Try `/` instead of `/page/slm`
+
+## Getting Help
+
+If you're still stuck:
+
+1. Check browser console for specific error messages
+2. Check Network tab for failed API calls
+3. Verify Supabase project is active (not paused)
+4. Check Supabase logs: Dashboard → Logs → API Logs
