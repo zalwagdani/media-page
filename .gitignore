@@ -29,5 +29,3 @@ dist-ssr
 .env.production.local
 .env.development.local
 
-VITE_SUPABASE_URL=https://ogxkkqskectpfpyyppys.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_QynfG_L8lvgw5-kkRWU-JA_b4z5zHqY
