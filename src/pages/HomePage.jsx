@@ -370,7 +370,7 @@ function HomePage() {
               <p className={`text-lg sm:text-xl font-medium transition-colors duration-300 ${
                 isDarkMode ? 'text-purple-200' : 'text-purple-600'
               }`}>
-                مرحباً بك! 👋
+               ارحب! 👋
               </p>
             </div>
 

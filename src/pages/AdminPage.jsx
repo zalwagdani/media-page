@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture } from '../services/api'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
 
@@ -169,13 +169,30 @@ function AdminPage() {
     }
   }
 
-  const handleRemovePicture = () => {
-    setProfile({
-      ...profile,
-      picture: '',
-      picture_path: ''
-    })
-    setPicturePreview(null)
+  const handleRemovePicture = async () => {
+    try {
+      // Delete from storage if picture_path exists
+      if (profile.picture_path) {
+        const result = await deleteProfilePicture(profile.picture_path)
+        if (!result.success) {
+          console.error('Failed to delete picture from storage:', result.error)
+          // Continue anyway to clear from UI
+        }
+      }
+
+      // Clear from state
+      setProfile({
+        ...profile,
+        picture: '',
+        picture_path: ''
+      })
+      setPicturePreview(null)
+
+      alert('تم حذف الصورة. لا تنسى حفظ الملف الشخصي لتطبيق التغييرات.')
+    } catch (error) {
+      console.error('Error removing picture:', error)
+      alert('حدث خطأ أثناء حذف الصورة')
+    }
   }
 
   const saveProfileData = async () => {
@@ -304,17 +321,25 @@ function AdminPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">لوحة التحكم</h1>
           <div className="flex gap-2">
-            <Link 
-              to="/" 
+            <button
+              onClick={() => {
+                // Navigate to home page by removing /admin from current URL
+                const currentPath = window.location.pathname
+                const homePath = currentPath.replace('/admin', '')
+                window.location.href = homePath || '/'
+              }}
               className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base whitespace-nowrap"
             >
               عرض الصفحة الرئيسية
-            </Link>
+            </button>
             <button
               onClick={() => {
                 if (window.confirm('هل أنت متأكد من تسجيل الخروج؟')) {
                   logoutAdmin()
-                  window.location.href = '/login'
+                  // Navigate to home page by removing /admin from current URL
+                  const currentPath = window.location.pathname
+                  const homePath = currentPath.replace('/admin', '')
+                  window.location.href = homePath || '/'
                 }
               }}
               className="px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base whitespace-nowrap"
@@ -394,41 +419,41 @@ function AdminPage() {
 
                 {/* File Upload Button */}
                 <div className="flex flex-col sm:flex-row gap-3 items-start">
-                  <label className="flex-1 cursor-pointer">
-                    <div className={`px-4 py-3 border-2 border-dashed rounded-lg text-center transition-all ${
-                      uploadingPicture
-                        ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
-                        : 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400'
-                    }`}>
-                      <div className="flex flex-col items-center gap-2">
-                        <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <span className="text-sm font-medium text-gray-700">
-                          {uploadingPicture ? 'جاري التحميل...' : 'اختر صورة من جهازك'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          PNG, JPG, GIF (حد أقصى 5 ميجابايت)
-                        </span>
+                  {!(profile.picture || picturePreview) ? (
+                    <label className="flex-1 cursor-pointer">
+                      <div className={`px-4 py-3 border-2 border-dashed rounded-lg text-center transition-all ${
+                        uploadingPicture
+                          ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                          : 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400'
+                      }`}>
+                        <div className="flex flex-col items-center gap-2">
+                          <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <span className="text-sm font-medium text-gray-700">
+                            {uploadingPicture ? 'جاري التحميل...' : 'اختر صورة من جهازك'}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            PNG, JPG, GIF (حد أقصى 5 ميجابايت)
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePictureUpload}
-                      disabled={uploadingPicture}
-                      className="hidden"
-                    />
-                  </label>
-
-                  {(profile.picture || picturePreview) && (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePictureUpload}
+                        disabled={uploadingPicture}
+                        className="hidden"
+                      />
+                    </label>
+                  ) : (
                     <button
                       type="button"
                       onClick={handleRemovePicture}
                       disabled={uploadingPicture}
-                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      حذف الصورة
+                      حذف الصورة واختيار صورة جديدة
                     </button>
                   )}
                 </div>
