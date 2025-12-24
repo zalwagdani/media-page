@@ -13,6 +13,7 @@ function AdminPage() {
   const currentPageId = routePageId || getPageId()
   const [profile, setProfile] = useState({
     name: '',
+    bio: '',
     picture: '',
     socialMedia: {
       twitter: '',
@@ -484,6 +485,28 @@ function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                  النبذة التعريفية (Bio)
+                </label>
+                <input
+                  type="text"
+                  value={profile.bio || ''}
+                  onChange={(e) => handleProfileChange('bio', e.target.value.slice(0, 50))}
+                  className="w-full px-3 sm:px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
+                  placeholder="مثال: مرحباً! 👋"
+                  maxLength={50}
+                />
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-xs text-gray-500">
+                    نص ترحيبي قصير يظهر تحت اسمك (اختياري)
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {(profile.bio || '').length}/50 حرف
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   صورة الملف الشخصي
                 </label>
 
@@ -748,18 +771,13 @@ function AdminPage() {
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">إعدادات الرسائل المجهولة</h2>
 
-              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl">
-                <div>
-                  <p className="font-medium text-gray-800 mb-1">تفعيل زر الرسائل المجهولة</p>
-                  <p className="text-sm text-gray-600">
-                    عند التفعيل، سيظهر زر عائم في الصفحة الرئيسية للزوار لإرسال رسائل مجهولة
-                  </p>
-                </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl" dir="ltr">
                 <button
                   onClick={() => handleToggleMessages(!messagesEnabled)}
-                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-8 w-14 flex-shrink-0 items-center rounded-full transition-colors ${
                     messagesEnabled ? 'bg-green-500' : 'bg-gray-300'
                   }`}
+                  aria-label={messagesEnabled ? 'تعطيل الرسائل المجهولة' : 'تفعيل الرسائل المجهولة'}
                 >
                   <span
                     className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
@@ -767,6 +785,12 @@ function AdminPage() {
                     }`}
                   />
                 </button>
+                <div className="flex-1 text-right">
+                  <p className="font-medium text-gray-800 mb-1">تفعيل زر الرسائل المجهولة</p>
+                  <p className="text-sm text-gray-600">
+                    عند التفعيل، سيظهر زر عائم في الصفحة الرئيسية للزوار لإرسال رسائل مجهولة
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -800,9 +824,9 @@ function AdminPage() {
                       key={msg.id}
                       className="group border-2 border-purple-100 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all bg-gradient-to-r from-white to-purple-50/30"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                      <div className="flex flex-col sm:flex-row items-start gap-3">
+                        <div className="flex-1 min-w-0 w-full">
+                          <div className="flex flex-wrap items-center gap-2 mb-2">
                             <span className="text-2xl">👤</span>
                             <span className="text-sm font-medium text-purple-600">
                               رسالة مجهولة
@@ -820,13 +844,13 @@ function AdminPage() {
                               })}
                             </span>
                           </div>
-                          <p className="text-gray-800 text-base sm:text-lg leading-relaxed">
+                          <p className="text-gray-800 text-base sm:text-lg leading-relaxed break-words whitespace-pre-wrap">
                             {msg.message}
                           </p>
                         </div>
                         <button
                           onClick={() => handleDeleteMessage(msg.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs sm:text-sm font-medium"
+                          className="sm:opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs sm:text-sm font-medium flex-shrink-0 w-full sm:w-auto"
                         >
                           حذف
                         </button>

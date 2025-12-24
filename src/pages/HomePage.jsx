@@ -87,6 +87,7 @@ function HomePage() {
         // Set default profile immediately to prevent white screen
         const defaultProfile = {
           name: 'سلم ال عباس',
+          bio: 'مرحباً! 👋',
           picture: 'https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/3dec0101691471a65ccd646a6f6c8f67~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=344a058b&x-expires=1766318400&x-signature=uml1wuDHXwLdorbeELuiZTZXxA4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
           socialMedia: {
             twitter: '',
@@ -362,17 +363,19 @@ function HomePage() {
             {/* Name with Friendly Welcome */}
             <div className="mb-6 sm:mb-8">
               <h1 className={`text-4xl sm:text-5xl md:text-6xl font-extrabold mb-3 transition-colors duration-300 bg-gradient-to-r ${
-                isDarkMode 
-                  ? 'text-transparent bg-clip-text from-purple-300 via-pink-300 to-blue-300' 
+                isDarkMode
+                  ? 'text-transparent bg-clip-text from-purple-300 via-pink-300 to-blue-300'
                   : 'text-transparent bg-clip-text from-pink-500 via-purple-500 to-blue-500'
               }`}>
                 {profile.name}
               </h1>
-              <p className={`text-lg sm:text-xl font-medium transition-colors duration-300 ${
-                isDarkMode ? 'text-purple-200' : 'text-purple-600'
-              }`}>
-               ارحب! 👋
-              </p>
+              {profile.bio && (
+                <p className={`text-lg sm:text-xl font-medium transition-colors duration-300 ${
+                  isDarkMode ? 'text-purple-200' : 'text-purple-600'
+                }`}>
+                  {profile.bio}
+                </p>
+              )}
             </div>
 
             {/* Social Media Links - Professional Circular Icons */}
@@ -558,6 +561,45 @@ function HomePage() {
 
       {/* Anonymous Message Floating Button */}
       <AnonymousMessageButton />
+
+      {/* Elegant Footer Signature */}
+      <footer className="mt-16 sm:mt-24 pb-8 sm:pb-12">
+        <div className="text-center">
+          <div className={`inline-block px-8 py-6 rounded-2xl transition-all duration-500 ${
+            isDarkMode
+              ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-pink-900/30 border border-purple-500/20 shadow-2xl shadow-purple-900/50'
+              : 'bg-gradient-to-br from-white/80 via-purple-50/50 to-pink-50/50 border border-purple-200/40 shadow-2xl shadow-purple-200/50'
+          } backdrop-blur-sm`}>
+            <div className="flex flex-col items-center gap-3">
+              {/* Decorative Line */}
+              <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
+              }`}></div>
+
+              {/* Main Signature Text */}
+              <p className={`text-lg sm:text-xl font-light tracking-wide transition-colors duration-500 ${
+                isDarkMode ? 'text-purple-200/90' : 'text-gray-600'
+              }`} style={{ fontFamily: '"Playfair Display", serif' }}>
+                Built by
+              </p>
+
+              {/* Creator Name */}
+              <h3 className={`text-3xl sm:text-4xl font-bold tracking-tight transition-all duration-500 bg-gradient-to-r ${
+                isDarkMode
+                  ? 'from-purple-300 via-pink-300 to-blue-300 text-transparent bg-clip-text'
+                  : 'from-purple-600 via-pink-600 to-blue-600 text-transparent bg-clip-text'
+              }`} style={{ fontFamily: '"Playfair Display", serif' }}>
+                Ziyad
+              </h3>
+
+              {/* Decorative Line */}
+              <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
+              }`}></div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
