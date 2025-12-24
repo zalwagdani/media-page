@@ -117,6 +117,7 @@ export const saveProfile = async (profile, pageId = null) => {
     page_id: currentPageId,
     name: profile.name,
     picture: profile.picture,
+    picture_path: profile.picture_path || null,
     social_media: profile.socialMedia || profile.social_media || {}
   }
 
@@ -416,11 +417,92 @@ export const createAdmin = async (email, password, pageId = null) => {
  */
 export const getPageAdmins = async (pageId = null) => {
   const currentPageId = pageId || getPageId()
-  
+
   const { data, error } = await supabase
     .from('admins')
     .select('*')
     .eq('page_id', currentPageId)
 
   return { data, error }
+}
+
+// ==================== STORAGE OPERATIONS ====================
+
+/**
+ * Upload profile picture to Supabase Storage
+ * Automatically deletes old picture if it exists
+ */
+export const uploadProfilePicture = async (file, pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  try {
+    // Get current profile to find old picture
+    const { data: currentProfile } = await supabase
+      .from('profiles')
+      .select('picture_path')
+      .eq('page_id', currentPageId)
+      .maybeSingle()
+
+    // Delete old picture if it exists
+    if (currentProfile?.picture_path) {
+      console.log('Deleting old picture:', currentProfile.picture_path)
+      const { error: deleteError } = await supabase.storage
+        .from('profile-pictures')
+        .remove([currentProfile.picture_path])
+
+      if (deleteError) {
+        console.warn('Failed to delete old picture:', deleteError)
+        // Continue anyway - we'll upload the new one
+      }
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${currentPageId}/${Date.now()}.${fileExt}`
+
+    // Upload new picture
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('profile-pictures')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      return { success: false, error: uploadError.message }
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('profile-pictures')
+      .getPublicUrl(fileName)
+
+    return {
+      success: true,
+      url: urlData.publicUrl,
+      path: fileName
+    }
+  } catch (error) {
+    console.error('Error in uploadProfilePicture:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Delete profile picture from storage
+ */
+export const deleteProfilePicture = async (picturePath) => {
+  if (!picturePath) return { success: true }
+
+  const { error } = await supabase.storage
+    .from('profile-pictures')
+    .remove([picturePath])
+
+  if (error) {
+    console.error('Error deleting picture:', error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }

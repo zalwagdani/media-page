@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode } from '../services/api'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
 
@@ -35,6 +35,8 @@ function AdminPage() {
 
   const [isDefaultData, setIsDefaultData] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [uploadingPicture, setUploadingPicture] = useState(false)
+  const [picturePreview, setPicturePreview] = useState(null)
 
   useEffect(() => {
     // Check authentication
@@ -113,6 +115,67 @@ function AdminPage() {
         [field]: value
       })
     }
+  }
+
+  const handlePictureUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('الرجاء اختيار صورة فقط')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('حجم الصورة كبير جداً. الحجم الأقصى 5 ميجابايت')
+      return
+    }
+
+    try {
+      setUploadingPicture(true)
+
+      // Show preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPicturePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+
+      // Upload to Supabase Storage
+      const result = await uploadProfilePicture(file, currentPageId)
+
+      if (!result.success) {
+        alert('فشل تحميل الصورة: ' + result.error)
+        setPicturePreview(null)
+        return
+      }
+
+      // Update profile with new picture URL and path
+      setProfile({
+        ...profile,
+        picture: result.url,
+        picture_path: result.path
+      })
+
+      alert('تم تحميل الصورة بنجاح! لا تنسى حفظ الملف الشخصي.')
+    } catch (error) {
+      console.error('Error uploading picture:', error)
+      alert('حدث خطأ أثناء تحميل الصورة')
+      setPicturePreview(null)
+    } finally {
+      setUploadingPicture(false)
+    }
+  }
+
+  const handleRemovePicture = () => {
+    setProfile({
+      ...profile,
+      picture: '',
+      picture_path: ''
+    })
+    setPicturePreview(null)
   }
 
   const saveProfileData = async () => {
@@ -326,26 +389,69 @@ function AdminPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  رابط صورة الملف الشخصي
+                  صورة الملف الشخصي
                 </label>
-                <input
-                  type="url"
-                  value={profile.picture}
-                  onChange={(e) => handleProfileChange('picture', e.target.value)}
-                  className="w-full px-3 sm:px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                  placeholder="https://example.com/your-picture.jpg"
-                />
-                {profile.picture && (
+
+                {/* File Upload Button */}
+                <div className="flex flex-col sm:flex-row gap-3 items-start">
+                  <label className="flex-1 cursor-pointer">
+                    <div className={`px-4 py-3 border-2 border-dashed rounded-lg text-center transition-all ${
+                      uploadingPicture
+                        ? 'border-gray-300 bg-gray-50 cursor-not-allowed'
+                        : 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400'
+                    }`}>
+                      <div className="flex flex-col items-center gap-2">
+                        <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span className="text-sm font-medium text-gray-700">
+                          {uploadingPicture ? 'جاري التحميل...' : 'اختر صورة من جهازك'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          PNG, JPG, GIF (حد أقصى 5 ميجابايت)
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePictureUpload}
+                      disabled={uploadingPicture}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {(profile.picture || picturePreview) && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePicture}
+                      disabled={uploadingPicture}
+                      className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      حذف الصورة
+                    </button>
+                  )}
+                </div>
+
+                {/* Image Preview */}
+                {(picturePreview || profile.picture) && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 mb-2">معاينة:</p>
-                    <img 
-                      src={profile.picture} 
-                      alt="معاينة الملف الشخصي"
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-gray-200"
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                      }}
-                    />
+                    <div className="relative inline-block">
+                      <img
+                        src={picturePreview || profile.picture}
+                        alt="معاينة الملف الشخصي"
+                        className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-blue-200 shadow-lg"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                      {uploadingPicture && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
