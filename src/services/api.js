@@ -461,7 +461,7 @@ export const uploadProfilePicture = async (file, pageId = null) => {
     const fileName = `${currentPageId}/${Date.now()}.${fileExt}`
 
     // Upload new picture
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('profile-pictures')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -505,4 +505,95 @@ export const deleteProfilePicture = async (picturePath) => {
   }
 
   return { success: true }
+}
+
+// ==================== ANONYMOUS MESSAGES OPERATIONS ====================
+
+/**
+ * Add anonymous message
+ */
+export const addAnonymousMessage = async (message, pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  const { data, error } = await supabase
+    .from('anonymous_messages')
+    .insert({
+      page_id: currentPageId,
+      message: message.trim().substring(0, 100), // Max 100 characters
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single()
+
+  return { data, error }
+}
+
+/**
+ * Get all anonymous messages for a page
+ */
+export const getAnonymousMessages = async (pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  const { data, error } = await supabase
+    .from('anonymous_messages')
+    .select('*')
+    .eq('page_id', currentPageId)
+    .order('created_at', { ascending: false })
+
+  return { data: data || [], error }
+}
+
+/**
+ * Delete an anonymous message
+ */
+export const deleteAnonymousMessage = async (messageId, pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  const { error } = await supabase
+    .from('anonymous_messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('page_id', currentPageId)
+
+  return { error }
+}
+
+/**
+ * Toggle anonymous messages feature
+ */
+export const toggleAnonymousMessages = async (enabled, pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  // First, ensure page exists
+  await getOrCreatePage(currentPageId)
+
+  const { data, error } = await supabase
+    .from('pages')
+    .update({ anonymous_messages_enabled: enabled })
+    .eq('id', currentPageId)
+    .select()
+    .single()
+
+  return { data, error }
+}
+
+/**
+ * Check if anonymous messages are enabled
+ */
+export const isAnonymousMessagesEnabled = async (pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  const { data, error } = await supabase
+    .from('pages')
+    .select('anonymous_messages_enabled')
+    .eq('id', currentPageId)
+    .maybeSingle()
+
+  // If page doesn't exist or error, default to enabled
+  if (error || !data) {
+    console.log('Anonymous messages enabled by default (page not found or error)')
+    return { enabled: true, error: null }
+  }
+
+  return { enabled: data.anonymous_messages_enabled !== false, error: null }
 }

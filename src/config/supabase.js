@@ -17,23 +17,31 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // Helper to get current page ID from URL or localStorage
 export const getPageId = () => {
-  // Option 1: From URL path (e.g., /page/my-page-id)
+  // Option 1: From URL path (e.g., /page/my-page-id or /media-page/page/my-page-id)
   const pathParts = window.location.pathname.split('/').filter(Boolean)
-  if (pathParts.length > 1 && pathParts[0] === 'page') {
-    return pathParts[1]
+
+  // Find 'page' in the path and get the next part
+  const pageIndex = pathParts.indexOf('page')
+  if (pageIndex !== -1 && pageIndex < pathParts.length - 1) {
+    const pageId = pathParts[pageIndex + 1]
+    console.log('✅ Page ID found in URL:', pageId)
+    return pageId
   }
-  
+
   // Option 2: From subdomain (e.g., my-page-id.yourapp.com)
   const hostname = window.location.hostname
   if (hostname.includes('.')) {
     const subdomain = hostname.split('.')[0]
     if (subdomain !== 'www' && subdomain !== 'localhost') {
+      console.log('✅ Page ID found in subdomain:', subdomain)
       return subdomain
     }
   }
-  
+
   // Option 3: Default page ID (for single page setup)
-  return localStorage.getItem('pageId') || 'default'
+  const defaultId = localStorage.getItem('pageId') || 'default'
+  console.log('⚠️ Using default page ID:', defaultId)
+  return defaultId
 }
 
 // Helper to set page ID

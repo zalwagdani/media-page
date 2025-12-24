@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { getProfile, getCodes } from '../services/api'
 import { getPageId } from '../config/supabase'
+import AnonymousMessageButton from '../components/AnonymousMessageButton'
 
 // Social Media Icon Components
 const TikTokIcon = () => (
@@ -554,6 +555,9 @@ function HomePage() {
           </>
         )}
       </div>
+
+      {/* Anonymous Message Floating Button */}
+      <AnonymousMessageButton />
     </div>
   )
 }

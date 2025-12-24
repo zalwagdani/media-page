@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture } from '../services/api'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
 
 function AdminPage() {
   const { pageId: routePageId } = useParams()
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('profile') // 'profile' or 'codes'
+  const [activeTab, setActiveTab] = useState('profile') // 'profile', 'codes', or 'messages'
   
   // Get current page ID
   const currentPageId = routePageId || getPageId()
@@ -38,6 +38,10 @@ function AdminPage() {
   const [uploadingPicture, setUploadingPicture] = useState(false)
   const [picturePreview, setPicturePreview] = useState(null)
 
+  // Anonymous messages state
+  const [messages, setMessages] = useState([])
+  const [messagesEnabled, setMessagesEnabled] = useState(true)
+
   useEffect(() => {
     // Check authentication
     if (!isAdminAuthenticated()) {
@@ -51,14 +55,16 @@ function AdminPage() {
         setLoading(true)
         console.log('Loading data for page ID:', currentPageId)
         
-        const [profileResult, codesResult] = await Promise.all([
+        const [profileResult, codesResult, messagesResult, enabledResult] = await Promise.all([
           getProfile(currentPageId),
-          getCodes(currentPageId)
+          getCodes(currentPageId),
+          getAnonymousMessages(currentPageId),
+          isAnonymousMessagesEnabled(currentPageId)
         ])
         
         console.log('Profile result:', profileResult)
         console.log('Codes result:', codesResult)
-        
+
         if (profileResult.data) {
           // Ensure socialMedia object exists with all platforms
           const profileData = {
@@ -76,7 +82,7 @@ function AdminPage() {
           }
           setProfile(profileData)
           setIsDefaultData(profileResult.isDefault || profileResult.data._isDefault || false)
-          
+
           if (profileResult.isDefault || profileResult.data._isDefault) {
             console.warn('⚠️ Showing default data - no profile found in database for page:', currentPageId)
             console.warn('💡 Save the profile to create it in the database')
@@ -84,9 +90,17 @@ function AdminPage() {
             console.log('✅ Profile loaded from database')
           }
         }
-        
+
         if (codesResult.data) {
           setCodes(codesResult.data)
+        }
+
+        if (messagesResult.data) {
+          setMessages(messagesResult.data)
+        }
+
+        if (enabledResult) {
+          setMessagesEnabled(enabledResult.enabled)
         }
       } catch (error) {
         console.error('Error loading data:', error)
@@ -314,6 +328,47 @@ function AdminPage() {
     setCodeForm({ title: '', description: '', discountCode: '', tags: '' })
   }
 
+  const handleDeleteMessage = async (messageId) => {
+    if (window.confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+      try {
+        const result = await deleteAnonymousMessage(messageId, currentPageId)
+
+        if (result.error) {
+          alert('حدث خطأ أثناء حذف الرسالة: ' + result.error.message)
+          return
+        }
+
+        // Reload messages
+        const messagesResult = await getAnonymousMessages(currentPageId)
+        if (messagesResult.data) {
+          setMessages(messagesResult.data)
+        }
+
+        alert('تم حذف الرسالة بنجاح!')
+      } catch (error) {
+        console.error('Error deleting message:', error)
+        alert('حدث خطأ أثناء حذف الرسالة')
+      }
+    }
+  }
+
+  const handleToggleMessages = async (enabled) => {
+    try {
+      const result = await toggleAnonymousMessages(enabled, currentPageId)
+
+      if (result.error) {
+        alert('حدث خطأ أثناء تغيير الإعدادات: ' + result.error.message)
+        return
+      }
+
+      setMessagesEnabled(enabled)
+      alert(enabled ? 'تم تفعيل الرسائل المجهولة!' : 'تم تعطيل الرسائل المجهولة!')
+    } catch (error) {
+      console.error('Error toggling messages:', error)
+      alert('حدث خطأ أثناء تغيير الإعدادات')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-6xl">
@@ -370,6 +425,21 @@ function AdminPage() {
             }`}
           >
             إدارة أكواد الخصم
+          </button>
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={`px-4 sm:px-6 py-2 sm:py-3 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
+              activeTab === 'messages'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            الرسائل المجهولة
+            {messages.length > 0 && (
+              <span className="ml-2 px-2 py-1 bg-red-500 text-white text-xs rounded-full">
+                {messages.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -663,6 +733,104 @@ function AdminPage() {
                       <p className="text-xs text-gray-400 mt-2">
                         تم الإضافة: {new Date(code.createdAt).toLocaleString('ar-SA')}
                       </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Messages Tab */}
+        {activeTab === 'messages' && (
+          <div className="space-y-4 sm:space-y-6">
+            {/* Settings Card */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">إعدادات الرسائل المجهولة</h2>
+
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl">
+                <div>
+                  <p className="font-medium text-gray-800 mb-1">تفعيل زر الرسائل المجهولة</p>
+                  <p className="text-sm text-gray-600">
+                    عند التفعيل، سيظهر زر عائم في الصفحة الرئيسية للزوار لإرسال رسائل مجهولة
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleToggleMessages(!messagesEnabled)}
+                  className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
+                    messagesEnabled ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                      messagesEnabled ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Messages List */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                  الرسائل المجهولة ({messages.length})
+                </h2>
+                {messages.length > 0 && (
+                  <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                    {messages.length} رسالة جديدة
+                  </span>
+                )}
+              </div>
+
+              {messages.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">💌</div>
+                  <p className="text-gray-500 text-lg mb-2">لا توجد رسائل بعد</p>
+                  <p className="text-gray-400 text-sm">
+                    {messagesEnabled
+                      ? 'عندما يرسل الزوار رسائل مجهولة، ستظهر هنا'
+                      : 'قم بتفعيل الرسائل المجهولة أولاً لتلقي الرسائل'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 sm:space-y-4">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className="group border-2 border-purple-100 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all bg-gradient-to-r from-white to-purple-50/30"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-2xl">👤</span>
+                            <span className="text-sm font-medium text-purple-600">
+                              رسالة مجهولة
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              •
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(msg.created_at).toLocaleString('ar-SA', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-gray-800 text-base sm:text-lg leading-relaxed">
+                            {msg.message}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs sm:text-sm font-medium"
+                        >
+                          حذف
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
