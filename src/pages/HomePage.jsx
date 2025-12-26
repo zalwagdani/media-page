@@ -437,45 +437,96 @@ function HomePage() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? `bg-gradient-to-br ${currentTheme.gradient}` : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-16 max-w-5xl">
-        {/* Action Buttons - Share and Dark Mode */}
-        <div className="flex justify-between items-center mb-6">
-          {/* Share Button */}
-          <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: profile.name,
-                  text: profile.bio || `تحقق من صفحة ${profile.name}`,
-                  url: window.location.href
-                }).catch(err => console.log('Error sharing:', err))
-              } else {
-                // Fallback: Copy to clipboard
-                navigator.clipboard.writeText(window.location.href)
-                alert('تم نسخ الرابط!')
-              }
-            }}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg hover:shadow-xl ${
-              isDarkMode
-                ? 'bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50'
-                : 'bg-black/10 hover:bg-black/20 border border-black/20 hover:border-black/30'
-            }`}
-            aria-label="مشاركة الصفحة"
-          >
-            <span className="text-2xl">🔗</span>
-          </button>
+        {/* Premium Glassmorphism Action Buttons - Fixed Pill Container */}
+        <div className="fixed top-4 right-4 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <div className={`flex items-center gap-2 px-2 py-2 rounded-full backdrop-blur-xl transition-all duration-300 shadow-2xl ${
+            isDarkMode
+              ? 'bg-white/10 border border-white/20 shadow-purple-500/20'
+              : 'bg-white/40 border border-white/60 shadow-black/10'
+          }`}>
+            {/* Share Button */}
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: profile.name,
+                    text: profile.bio || `تحقق من صفحة ${profile.name}`,
+                    url: window.location.href
+                  }).catch(err => console.log('Error sharing:', err))
+                } else {
+                  navigator.clipboard.writeText(window.location.href)
+                  alert('تم نسخ الرابط!')
+                }
+              }}
+              className={`relative w-11 h-11 rounded-full transition-all duration-200 transform active:scale-90 flex items-center justify-center group ${
+                isDarkMode
+                  ? 'hover:bg-white/20 text-white'
+                  : 'hover:bg-black/10 text-gray-800'
+              }`}
+              aria-label="Share page"
+            >
+              <svg
+                className="w-5 h-5 transition-transform duration-200 group-active:scale-90"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              {/* Ripple effect on tap */}
+              <span className="absolute inset-0 rounded-full bg-current opacity-0 group-active:opacity-10 transition-opacity duration-200"></span>
+            </button>
 
-          {/* Dark Mode Toggle Button - Emoji Only */}
-          <button
-            onClick={toggleDarkMode}
-            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg hover:shadow-xl ${
-              isDarkMode
-                ? 'bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50'
-                : 'bg-black/10 hover:bg-black/20 border border-black/20 hover:border-black/30'
-            }`}
-            aria-label={isDarkMode ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
-          >
-            <span className="text-2xl animate-pulse">{isDarkMode ? '🌙' : '☀️'}</span>
-          </button>
+            {/* Separator */}
+            <div className={`w-px h-6 ${isDarkMode ? 'bg-white/20' : 'bg-black/10'}`}></div>
+
+            {/* Dark Mode Toggle Button */}
+            <button
+              onClick={toggleDarkMode}
+              className={`relative w-11 h-11 rounded-full transition-all duration-200 transform active:scale-90 flex items-center justify-center group ${
+                isDarkMode
+                  ? 'hover:bg-white/20 text-yellow-300'
+                  : 'hover:bg-black/10 text-gray-800'
+              }`}
+              aria-label="Toggle dark mode"
+            >
+              {/* Moon Icon (Dark Mode) */}
+              <svg
+                className={`w-5 h-5 absolute transition-all duration-300 ${
+                  isDarkMode
+                    ? 'opacity-100 rotate-0 scale-100'
+                    : 'opacity-0 rotate-90 scale-0'
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+              </svg>
+              {/* Sun Icon (Light Mode) */}
+              <svg
+                className={`w-5 h-5 absolute transition-all duration-300 ${
+                  isDarkMode
+                    ? 'opacity-0 -rotate-90 scale-0'
+                    : 'opacity-100 rotate-0 scale-100'
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {/* Ripple effect on tap */}
+              <span className="absolute inset-0 rounded-full bg-current opacity-0 group-active:opacity-10 transition-opacity duration-200"></span>
+            </button>
+          </div>
         </div>
 
         {/* Profile Section - Super Friendly Design */}
