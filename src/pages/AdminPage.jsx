@@ -4,6 +4,7 @@ import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, upl
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
 import { themes } from '../config/themes'
+import { layouts } from '../config/layouts'
 
 function AdminPage() {
   const { pageId: routePageId } = useParams()
@@ -17,6 +18,7 @@ function AdminPage() {
     bio: '',
     picture: '',
     theme: 'gradient-purple',
+    layout: 'classic',
     youtube_url: '',
     socialMedia: {
       twitter: '',
@@ -682,6 +684,64 @@ function AdminPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   💡 الصق رابط فيديو يوتيوب وسيظهر في صفحتك الرئيسية
+                </p>
+              </div>
+
+              {/* Layout Selection */}
+              <div className="mb-8">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <span className="text-lg">🎨</span> تصميم الصفحة (Layout)
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(layouts).map(([key, layout]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleProfileChange('layout', key)}
+                      className={`relative group p-5 rounded-2xl border-2 transition-all text-right ${
+                        profile.layout === key
+                          ? 'border-purple-500 shadow-xl scale-105 bg-purple-50'
+                          : 'border-gray-200 hover:border-purple-300 hover:shadow-lg bg-white'
+                      }`}
+                    >
+                      {/* Layout Icon */}
+                      <div className="text-4xl mb-3 text-center">
+                        {layout.icon}
+                      </div>
+
+                      {/* Layout Name */}
+                      <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">
+                        {layout.name}
+                      </h3>
+
+                      {/* Layout Description */}
+                      <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+                        {layout.description}
+                      </p>
+
+                      {/* Selected Indicator */}
+                      {profile.layout === key && (
+                        <div className="absolute top-3 left-3 w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center shadow-lg">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+
+                      {/* Hover Effect */}
+                      <div className={`absolute inset-0 rounded-2xl transition-opacity ${
+                        profile.layout === key
+                          ? 'bg-purple-500/5'
+                          : 'bg-gray-500/0 group-hover:bg-gray-500/5'
+                      }`}></div>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-3 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  اختر تصميم الصفحة الذي يناسبك - يمكنك تغييره في أي وقت
                 </p>
               </div>
 

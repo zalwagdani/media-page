@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { addAnonymousMessage, isAnonymousMessagesEnabled } from '../services/api'
 import { getPageId } from '../config/supabase'
 
-function AnonymousMessageButton() {
+function AnonymousMessageButton({ theme, isDarkMode }) {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [category, setCategory] = useState('suggestion') // 'suggestion', 'question', 'opinion'
@@ -62,7 +62,7 @@ function AnonymousMessageButton() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-2xl hover:shadow-purple-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group"
+        className={`fixed bottom-6 right-6 w-14 h-14 ${theme?.accent || 'bg-gradient-to-r from-purple-500 to-pink-500'} text-white rounded-full shadow-2xl ${theme?.glow ? `hover:${theme.glow}` : 'hover:shadow-purple-500/50'} hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group`}
         aria-label="إرسال رسالة مجهولة"
       >
         <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,20 +78,28 @@ function AnonymousMessageButton() {
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={handleBackdropClick}
         >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all animate-scale-in">
+          <div className={`rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all animate-scale-in ${
+            isDarkMode
+              ? `bg-gradient-to-br ${theme?.cardBg || 'from-gray-800/90 to-gray-900/90'} ${theme?.border || 'border-purple-500/30'} border-2`
+              : 'bg-white'
+          }`}>
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <div className={`w-10 h-10 ${theme?.accent || 'bg-gradient-to-r from-purple-500 to-pink-500'} rounded-full flex items-center justify-center`}>
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">رسالة مجهولة 💌</h2>
+                <h2 className={`text-xl font-bold ${isDarkMode ? theme?.text || 'text-purple-100' : 'text-gray-800'}`}>رسالة مجهولة 💌</h2>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all"
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+                  isDarkMode
+                    ? 'hover:bg-white/10 text-gray-400 hover:text-white'
+                    : 'hover:bg-gray-100 text-gray-400 hover:text-gray-600'
+                }`}
                 aria-label="إغلاق"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +109,7 @@ function AnonymousMessageButton() {
             </div>
 
             {/* Description */}
-            <p className="text-gray-600 text-sm mb-4">
+            <p className={`text-sm mb-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               اكتب رسالتك المجهولة هنا. يمكنك كتابة ما يصل إلى 100 حرف. رسالتك ستكون مجهولة تماماً.
             </p>
 
@@ -109,7 +117,7 @@ function AnonymousMessageButton() {
             <form onSubmit={handleSubmit}>
               {/* Category Selection */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">نوع الرسالة</label>
+                <label className={`block text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>نوع الرسالة</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
@@ -117,7 +125,9 @@ function AnonymousMessageButton() {
                     className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
                       category === 'suggestion'
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        : isDarkMode
+                          ? 'border-gray-600 hover:border-gray-500 text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                     }`}
                   >
                     💡 اقتراح
@@ -128,7 +138,9 @@ function AnonymousMessageButton() {
                     className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
                       category === 'question'
                         ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        : isDarkMode
+                          ? 'border-gray-600 hover:border-gray-500 text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                     }`}
                   >
                     ❓ سؤال
@@ -139,7 +151,9 @@ function AnonymousMessageButton() {
                     className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
                       category === 'opinion'
                         ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        : isDarkMode
+                          ? 'border-gray-600 hover:border-gray-500 text-white'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
                     }`}
                   >
                     💭 رأي
@@ -152,13 +166,17 @@ function AnonymousMessageButton() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value.slice(0, 100))}
                   placeholder="اكتب رسالتك هنا..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 resize-none text-right"
+                  className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none resize-none text-right ${
+                    isDarkMode
+                      ? `bg-gray-700/50 ${theme?.border || 'border-purple-500/30'} text-gray-100 placeholder-gray-400 focus:${theme?.border?.replace('/30', '') || 'border-purple-500'}`
+                      : 'bg-white border-gray-200 text-gray-800 placeholder-gray-400 focus:border-purple-500'
+                  }`}
                   rows="4"
                   maxLength={100}
                   disabled={sending}
                 />
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs text-gray-400">
+                  <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
                     {message.length}/100 حرف
                   </span>
                   {message.length >= 95 && (
@@ -174,7 +192,7 @@ function AnonymousMessageButton() {
                 <button
                   type="submit"
                   disabled={sending || !message.trim()}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className={`flex-1 px-6 py-3 ${theme?.accent || 'bg-gradient-to-r from-purple-500 to-pink-500'} text-white rounded-xl hover:shadow-lg ${theme?.glow ? `hover:${theme.glow}` : 'hover:shadow-purple-500/50'} transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium`}
                 >
                   {sending ? (
                     <span className="flex items-center justify-center gap-2">
@@ -192,7 +210,11 @@ function AnonymousMessageButton() {
                   type="button"
                   onClick={() => setIsOpen(false)}
                   disabled={sending}
-                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className={`px-6 py-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium ${
+                    isDarkMode
+                      ? 'bg-white/10 text-gray-300 hover:bg-white/20'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
                   إلغاء
                 </button>
@@ -200,8 +222,12 @@ function AnonymousMessageButton() {
             </form>
 
             {/* Privacy Note */}
-            <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-xs text-purple-800">
+            <div className={`mt-4 p-3 border rounded-lg ${
+              isDarkMode
+                ? `bg-white/5 ${theme?.border || 'border-purple-500/30'}`
+                : 'bg-purple-50 border-purple-200'
+            }`}>
+              <p className={`text-xs ${isDarkMode ? theme?.text || 'text-purple-100' : 'text-purple-800'}`}>
                 🔒 رسالتك مجهولة بالكامل. لن يتمكن أحد من معرفة هويتك.
               </p>
             </div>

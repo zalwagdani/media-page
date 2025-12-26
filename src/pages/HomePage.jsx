@@ -5,6 +5,10 @@ import { getPageId } from '../config/supabase'
 import AnonymousMessageButton from '../components/AnonymousMessageButton'
 import PageNotFoundPage from './PageNotFoundPage'
 import { getTheme } from '../config/themes'
+import { getLayout } from '../config/layouts'
+import ClassicLayout from '../components/layouts/ClassicLayout'
+import ModernLayout from '../components/layouts/ModernLayout'
+import MinimalLayout from '../components/layouts/MinimalLayout'
 
 // Social Media Icon Components
 const TikTokIcon = () => (
@@ -433,6 +437,7 @@ function HomePage() {
 
   // Get theme configuration
   const currentTheme = getTheme(profile.theme || 'gradient-purple')
+  const currentLayout = getLayout(profile.layout || 'classic')
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? `bg-gradient-to-br ${currentTheme.gradient}` : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
@@ -441,7 +446,7 @@ function HomePage() {
         <div className="fixed top-4 right-4 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <div className={`flex items-center gap-2 px-2 py-2 rounded-full backdrop-blur-xl transition-all duration-300 shadow-2xl ${
             isDarkMode
-              ? 'bg-white/10 border border-white/20 shadow-purple-500/20'
+              ? `bg-white/10 border border-white/20 ${currentTheme.glow}`
               : 'bg-white/40 border border-white/60 shadow-black/10'
           }`}>
             {/* Share Button */}
@@ -529,309 +534,96 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Profile Section - Super Friendly Design */}
-        <div className={`rounded-3xl sm:rounded-[2.5rem] shadow-2xl p-8 sm:p-12 mb-8 sm:mb-10 border-2 transition-all duration-500 transform hover:scale-[1.01] ${
-          isDarkMode 
-            ? 'bg-gradient-to-br from-gray-800/90 via-gray-800/80 to-gray-900/90 border-purple-500/30 backdrop-blur-sm' 
-            : 'bg-white/90 border-pink-200/50 backdrop-blur-sm shadow-pink-100'
-        }`}>
-          <div className="flex flex-col items-center text-center">
-            {/* Profile Picture - Large and Circular with Friendly Animation */}
-            <div className="mb-8 sm:mb-10 transform hover:scale-105 transition-transform duration-300">
-              {profile.picture && !imageLoadError ? (
-                <div className="relative group w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56">
-                  <div className={`absolute inset-0 rounded-full blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-300 ${
-                    isDarkMode ? 'bg-gradient-to-br from-purple-400 to-pink-400' : 'bg-gradient-to-br from-pink-300 to-blue-300'
-                  }`}></div>
-                  <img
-                    src={profile.picture}
-                    alt={profile.name}
-                    crossOrigin="anonymous"
-                    referrerPolicy="no-referrer"
-                    loading="eager"
-                    className={`relative w-full h-full rounded-full object-cover border-4 shadow-2xl ring-4 transition-all duration-300 transform group-hover:rotate-3 ${
-                      isDarkMode
-                        ? 'border-purple-400 ring-purple-900/50'
-                        : 'border-pink-400 ring-pink-100'
-                    }`}
-                    onError={() => {
-                      console.log('Image failed to load:', profile.picture)
-                      setImageLoadError(true)
-                    }}
-                    onLoad={() => {
-                      console.log('Image loaded successfully:', profile.picture)
-                      setImageLoadError(false)
-                    }}
-                  />
-                </div>
-              ) : (
-                <div className={`relative group w-36 h-36 sm:w-44 sm:h-44 md:w-56 md:h-56 rounded-full bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center text-white text-5xl sm:text-6xl md:text-7xl font-bold border-4 shadow-2xl ring-4 transition-all duration-300 transform hover:scale-110 ${
-                  isDarkMode
-                    ? 'border-purple-400 ring-purple-900/50'
-                    : 'border-pink-400 ring-pink-100'
-                }`}>
-                  <div className={`absolute inset-0 rounded-full blur-xl opacity-50 ${
-                    isDarkMode ? 'bg-gradient-to-br from-purple-400 to-pink-400' : 'bg-gradient-to-br from-pink-300 to-blue-300'
-                  }`}></div>
-                  <span className="relative z-10">{profile.name ? profile.name.charAt(0) : '👋'}</span>
-                </div>
-              )}
-            </div>
+        {/* Dynamic Layout Based on User Selection */}
+        {currentLayout.name === 'عصري' ? (
+          <ModernLayout
+            profile={profile}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+            imageLoadError={imageLoadError}
+            setImageLoadError={setImageLoadError}
+            activeSocialMedia={activeSocialMedia}
+            renderSocialIcon={(platform) => socialIcons[platform]}
+            codes={codes}
+            filteredCodes={filteredCodes}
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+          />
+        ) : currentLayout.name === 'بسيط' ? (
+          <MinimalLayout
+            profile={profile}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+            imageLoadError={imageLoadError}
+            setImageLoadError={setImageLoadError}
+            activeSocialMedia={activeSocialMedia}
+            renderSocialIcon={(platform) => socialIcons[platform]}
+            codes={codes}
+            filteredCodes={filteredCodes}
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+          />
+        ) : (
+          <ClassicLayout
+            profile={profile}
+            currentTheme={currentTheme}
+            isDarkMode={isDarkMode}
+            imageLoadError={imageLoadError}
+            setImageLoadError={setImageLoadError}
+            activeSocialMedia={activeSocialMedia}
+            renderSocialIcon={(platform) => socialIcons[platform]}
+            codes={codes}
+            filteredCodes={filteredCodes}
+            searchTerm={searchQuery}
+            setSearchTerm={setSearchQuery}
+            getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+          />
+        )}
 
-            {/* Name with Friendly Welcome */}
-            <div className="mb-6 sm:mb-8">
-              <h1 className={`text-4xl sm:text-5xl md:text-6xl font-extrabold mb-3 transition-colors duration-300 bg-gradient-to-r ${
-                isDarkMode
-                  ? 'text-transparent bg-clip-text from-purple-300 via-pink-300 to-blue-300'
-                  : 'text-transparent bg-clip-text from-pink-500 via-purple-500 to-blue-500'
-              }`}>
-                {profile.name}
-              </h1>
-              {profile.bio && (
-                <p className={`text-lg sm:text-xl font-medium transition-colors duration-300 ${
-                  isDarkMode ? 'text-purple-200' : 'text-purple-600'
-                }`}>
-                  {profile.bio}
+        {/* Anonymous Message Floating Button */}
+        <AnonymousMessageButton theme={currentTheme} isDarkMode={isDarkMode} />
+
+        {/* Elegant Footer Signature */}
+        <footer className="mt-16 sm:mt-24 pb-8 sm:pb-12">
+          <div className="text-center">
+            <div className={`inline-block px-8 py-6 rounded-2xl transition-all duration-500 ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-pink-900/30 border border-purple-500/20 shadow-2xl shadow-purple-900/50'
+                : 'bg-gradient-to-br from-white/80 via-purple-50/50 to-pink-50/50 border border-purple-200/40 shadow-2xl shadow-purple-200/50'
+            } backdrop-blur-sm`}>
+              <div className="flex flex-col items-center gap-3">
+                {/* Decorative Line */}
+                <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                  isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
+                }`}></div>
+
+                {/* Main Signature Text */}
+                <p className={`text-lg sm:text-xl font-light tracking-wide transition-colors duration-500 ${
+                  isDarkMode ? 'text-purple-200/90' : 'text-gray-600'
+                }`} style={{ fontFamily: '"Playfair Display", serif' }}>
+                  Built by
                 </p>
-              )}
-            </div>
 
-            {/* Social Media Links - Professional Circular Icons */}
-            {activeSocialMedia.length > 0 && (
-              <div className="flex flex-wrap gap-4 justify-center w-full max-w-2xl">
-                {activeSocialMedia.map(([platform, url]) => {
-                  // processUrl already handles special cases (mailto:, tel:, wa.me)
-                  // No need for additional URL normalization here
-                  const absoluteUrl = url
+                {/* Creator Name */}
+                <h3 className={`text-3xl sm:text-4xl font-bold tracking-tight transition-all duration-500 bg-gradient-to-r ${
+                  isDarkMode
+                    ? 'from-purple-300 via-pink-300 to-blue-300 text-transparent bg-clip-text'
+                    : 'from-purple-600 via-pink-600 to-blue-600 text-transparent bg-clip-text'
+                }`} style={{ fontFamily: '"Playfair Display", serif' }}>
+                  Ziyad
+                </h3>
 
-                  // Don't open email and phone links in new tab
-                  const shouldOpenInNewTab = !url.startsWith('mailto:') && !url.startsWith('tel:')
-
-                  console.log(`Social link [${platform}]: ${absoluteUrl}`)
-
-                  return (
-                    <a
-                      key={platform}
-                      href={absoluteUrl}
-                      {...(shouldOpenInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                      className={`group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 ${
-                        isDarkMode
-                          ? 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 hover:border-white/30'
-                          : 'bg-gray-900/90 hover:bg-gray-900 text-white border border-gray-900'
-                      }`}
-                      aria-label={platform}
-                    >
-                      {socialIcons[platform]}
-                    </a>
-                  )
-                })}
+                {/* Decorative Line */}
+                <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                  isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
+                }`}></div>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* YouTube Video Section */}
-        {profile.youtube_url && getYouTubeEmbedUrl(profile.youtube_url) && (
-          <div className="mt-8 sm:mt-12 max-w-4xl mx-auto">
-            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
-              <iframe
-                src={getYouTubeEmbedUrl(profile.youtube_url)}
-                title="YouTube video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
             </div>
           </div>
-        )}
-
-        {/* Search Section and Discount Codes Display - Only show if codes exist */}
-        {codes.length > 0 && (
-          <>
-            {/* Search Section - Friendly Design */}
-            <div className={`rounded-3xl sm:rounded-[2.5rem] shadow-xl p-6 sm:p-8 mb-8 sm:mb-10 border-2 transition-all duration-500 ${
-              isDarkMode 
-                ? 'bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-purple-500/30 backdrop-blur-sm' 
-                : 'bg-white/90 border-pink-200/50 backdrop-blur-sm shadow-pink-100'
-            }`}>
-              <div className="flex items-center gap-3 mb-5 sm:mb-6">
-                <span className="text-3xl sm:text-4xl">🎁</span>
-                <h2 className={`text-2xl sm:text-3xl font-extrabold transition-colors duration-300 bg-gradient-to-r ${
-                  isDarkMode 
-                    ? 'text-transparent bg-clip-text from-purple-300 to-pink-300' 
-                    : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
-                }`}>
-                  البحث عن أكواد الخصم
-                </h2>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="ابحث حسب المتجر، الوصف، كود الخصم، أو العلامات... 🔎"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full px-5 sm:px-6 py-4 sm:py-5 pr-14 sm:pr-16 text-sm sm:text-base border-2 rounded-2xl focus:outline-none transition-all duration-300 shadow-md focus:shadow-lg ${
-                    isDarkMode
-                      ? 'bg-gray-700/50 border-purple-500/30 text-gray-100 placeholder-gray-400 focus:border-purple-400 focus:ring-4 focus:ring-purple-900/30'
-                      : 'bg-white/80 border-pink-200 text-gray-800 placeholder-gray-400 focus:border-pink-400 focus:ring-4 focus:ring-pink-200'
-                  }`}
-                />
-                <span className={`absolute right-5 sm:right-6 top-1/2 transform -translate-y-1/2 text-2xl sm:text-3xl pointer-events-none animate-pulse ${
-                  isDarkMode ? 'text-purple-300' : 'text-pink-400'
-                }`}>
-                  🔍
-                </span>
-              </div>
-            </div>
-
-            {/* Discount Codes Display - Super Friendly */}
-            <div className="space-y-5 sm:space-y-6">
-              {filteredCodes.length === 0 ? (
-                <div className={`rounded-3xl sm:rounded-[2.5rem] shadow-xl p-10 sm:p-12 text-center border-2 transition-all duration-500 ${
-                  isDarkMode 
-                    ? 'bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-purple-500/30 backdrop-blur-sm' 
-                    : 'bg-white/90 border-pink-200/50 backdrop-blur-sm shadow-pink-100'
-                }`}>
-                  <div className="text-5xl sm:text-6xl mb-4">🔍</div>
-                  <p className={`text-lg sm:text-xl font-semibold transition-colors duration-300 ${
-                    isDarkMode ? 'text-purple-200' : 'text-purple-600'
-                  }`}>
-                    لم يتم العثور على أكواد خصم تطابق بحثك.
-                  </p>
-                  <p className={`text-sm sm:text-base mt-2 transition-colors duration-300 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    جرب كلمات بحث أخرى! ✨
-                  </p>
-                </div>
-              ) : (
-                filteredCodes.map((code) => (
-              <div key={code.id} className={`group rounded-3xl sm:rounded-[2.5rem] shadow-lg p-6 sm:p-8 hover:shadow-2xl transition-all duration-500 border-2 transform hover:scale-[1.02] ${
-                isDarkMode
-                  ? 'bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-purple-500/30 hover:border-purple-400/50 backdrop-blur-sm'
-                  : 'bg-white/90 border-pink-200/50 hover:border-pink-300 backdrop-blur-sm shadow-pink-100'
-              }`}>
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-0 mb-5">
-                  <div className="flex items-start gap-3">
-                    <span className="text-3xl sm:text-4xl transform group-hover:scale-125 transition-transform duration-300">🎉</span>
-                    <h3 className={`text-xl sm:text-2xl md:text-3xl font-extrabold break-words transition-colors duration-300 bg-gradient-to-r ${
-                      isDarkMode 
-                        ? 'text-transparent bg-clip-text from-purple-300 to-pink-300' 
-                        : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
-                    }`}>{code.title || 'كود خصم بدون عنوان'}</h3>
-                  </div>
-                  {code.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {code.tags.map((tag, idx) => (
-                        <span 
-                          key={idx}
-                          className={`px-4 py-1.5 rounded-xl text-xs sm:text-sm font-semibold shadow-md transition-all duration-300 transform hover:scale-110 ${
-                            isDarkMode
-                              ? 'bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white border border-purple-400/30'
-                              : 'bg-gradient-to-r from-pink-100 to-purple-100 text-purple-700 border border-pink-200'
-                          }`}
-                        >
-                          {tag} ✨
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {code.description && (
-                  <p className={`mb-5 sm:mb-6 text-base sm:text-lg leading-relaxed transition-colors duration-300 ${
-                    isDarkMode ? 'text-gray-200' : 'text-gray-600'
-                  }`}>{code.description}</p>
-                )}
-                {(code.discountCode || code.code) && (
-                  <div className={`border-2 rounded-2xl p-5 sm:p-6 mb-5 shadow-lg transition-all duration-300 transform hover:scale-[1.02] ${
-                    isDarkMode
-                      ? 'bg-gradient-to-r from-green-800/80 to-emerald-800/80 border-green-500/50'
-                      : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300'
-                  }`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className="text-2xl">🎁</span>
-                          <p className={`text-sm sm:text-base font-semibold transition-colors duration-300 ${
-                            isDarkMode ? 'text-green-200' : 'text-green-700'
-                          }`}>كود الخصم:</p>
-                        </div>
-                        <p className={`text-3xl sm:text-4xl font-extrabold font-mono tracking-wider break-all transition-colors duration-300 ${
-                          isDarkMode ? 'text-green-200' : 'text-green-700'
-                        }`}>
-                          {code.discountCode || code.code}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(code.discountCode || code.code)
-                          alert('تم نسخ الكود إلى الحافظة! 🎉')
-                        }}
-                        className="group/btn w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white rounded-2xl transition-all duration-300 font-bold text-sm sm:text-base whitespace-nowrap shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                      >
-                        <span>نسخ</span>
-                        <span className="text-lg transform group-hover/btn:rotate-12 transition-transform duration-300">📋</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">📅</span>
-                  <p className={`text-xs sm:text-sm transition-colors duration-300 ${
-                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
-                    تم الإضافة: {new Date(code.createdAt).toLocaleDateString('ar-SA')}
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-          </>
-        )}
+        </footer>
       </div>
-
-      {/* Anonymous Message Floating Button */}
-      <AnonymousMessageButton />
-
-      {/* Elegant Footer Signature */}
-      <footer className="mt-16 sm:mt-24 pb-8 sm:pb-12">
-        <div className="text-center">
-          <div className={`inline-block px-8 py-6 rounded-2xl transition-all duration-500 ${
-            isDarkMode
-              ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-pink-900/30 border border-purple-500/20 shadow-2xl shadow-purple-900/50'
-              : 'bg-gradient-to-br from-white/80 via-purple-50/50 to-pink-50/50 border border-purple-200/40 shadow-2xl shadow-purple-200/50'
-          } backdrop-blur-sm`}>
-            <div className="flex flex-col items-center gap-3">
-              {/* Decorative Line */}
-              <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
-                isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
-              }`}></div>
-
-              {/* Main Signature Text */}
-              <p className={`text-lg sm:text-xl font-light tracking-wide transition-colors duration-500 ${
-                isDarkMode ? 'text-purple-200/90' : 'text-gray-600'
-              }`} style={{ fontFamily: '"Playfair Display", serif' }}>
-                Built by
-              </p>
-
-              {/* Creator Name */}
-              <h3 className={`text-3xl sm:text-4xl font-bold tracking-tight transition-all duration-500 bg-gradient-to-r ${
-                isDarkMode
-                  ? 'from-purple-300 via-pink-300 to-blue-300 text-transparent bg-clip-text'
-                  : 'from-purple-600 via-pink-600 to-blue-600 text-transparent bg-clip-text'
-              }`} style={{ fontFamily: '"Playfair Display", serif' }}>
-                Ziyad
-              </h3>
-
-              {/* Decorative Line */}
-              <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
-                isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
-              }`}></div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -74,6 +74,7 @@ export const getProfile = async (pageId = null) => {
         bio: 'مرحباً! 👋',
         picture: 'https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/3dec0101691471a65ccd646a6f6c8f67~tplv-tiktokx-cropcenter:1080:1080.jpeg?dr=14579&refresh_token=344a058b&x-expires=1766318400&x-signature=uml1wuDHXwLdorbeELuiZTZXxA4%3D&t=4d5b0474&ps=13740610&shp=a5d48078&shcp=81f88b70&idc=my2',
         theme: 'gradient-purple',
+        layout: 'classic',
         socialMedia: {
           twitter: '',
           instagram: 'google.com',
@@ -125,6 +126,7 @@ export const saveProfile = async (profile, pageId = null) => {
     picture: profile.picture,
     picture_path: profile.picture_path || null,
     theme: profile.theme || 'gradient-purple',
+    layout: profile.layout || 'classic',
     youtube_url: profile.youtube_url || null,
     social_media: profile.socialMedia || profile.social_media || {}
   }
