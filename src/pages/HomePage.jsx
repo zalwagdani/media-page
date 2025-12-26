@@ -100,13 +100,18 @@ function HomePage() {
       setLoading(true)
       setError(null)
       setImageLoadError(false)
-      
+
       try {
         // Use route param if available, otherwise detect from URL
         const currentPageId = routePageId || getPageId()
-        console.log('Loading data for page ID:', currentPageId)
+        console.log('=== HomePage Debug Info ===')
+        console.log('Route pageId (from React Router):', routePageId)
+        console.log('Detected pageId (from getPageId):', getPageId())
+        console.log('Final pageId being used:', currentPageId)
         console.log('Current URL:', window.location.pathname)
+        console.log('Current hostname:', window.location.hostname)
         console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Configured' : 'NOT CONFIGURED')
+        console.log('=========================')
         
         // Set default profile immediately to prevent white screen
         const defaultProfile = {
