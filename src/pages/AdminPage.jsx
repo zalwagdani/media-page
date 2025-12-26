@@ -405,8 +405,10 @@ function AdminPage() {
             <button
               onClick={() => {
                 // Navigate to home page by removing /admin from current URL
-                const currentPath = window.location.pathname
-                const homePath = currentPath.replace('/admin', '')
+                let currentPath = window.location.pathname
+                let homePath = currentPath.replace('/admin', '')
+                // Remove /page/ prefix if exists
+                homePath = homePath.replace(/^\/page\//, '/')
                 window.location.href = homePath || '/'
               }}
               className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base whitespace-nowrap"
@@ -418,8 +420,10 @@ function AdminPage() {
                 if (window.confirm('هل أنت متأكد من تسجيل الخروج؟')) {
                   logoutAdmin()
                   // Navigate to home page by removing /admin from current URL
-                  const currentPath = window.location.pathname
-                  const homePath = currentPath.replace('/admin', '')
+                  let currentPath = window.location.pathname
+                  let homePath = currentPath.replace('/admin', '')
+                  // Remove /page/ prefix if exists
+                  homePath = homePath.replace(/^\/page\//, '/')
                   window.location.href = homePath || '/'
                 }
               }}
@@ -527,7 +531,9 @@ function AdminPage() {
                 <p className="text-xs sm:text-sm font-medium text-gray-600 mb-1">رابط صفحتك الخاصة</p>
                 <p className="text-sm sm:text-base font-mono text-gray-800 break-all" dir="ltr">
                   {(() => {
-                    const currentPath = window.location.pathname.replace('/admin', '')
+                    let currentPath = window.location.pathname.replace('/admin', '')
+                    // Remove /page/ prefix if exists
+                    currentPath = currentPath.replace(/^\/page\//, '/')
                     const baseUrl = `${window.location.protocol}//${window.location.host}`
                     return `${baseUrl}${currentPath || '/'}`
                   })()}
@@ -536,7 +542,9 @@ function AdminPage() {
             </div>
             <button
               onClick={() => {
-                const currentPath = window.location.pathname.replace('/admin', '')
+                let currentPath = window.location.pathname.replace('/admin', '')
+                // Remove /page/ prefix if exists
+                currentPath = currentPath.replace(/^\/page\//, '/')
                 const baseUrl = `${window.location.protocol}//${window.location.host}`
                 const mediaPageUrl = `${baseUrl}${currentPath || '/'}`
                 navigator.clipboard.writeText(mediaPageUrl).then(() => {
