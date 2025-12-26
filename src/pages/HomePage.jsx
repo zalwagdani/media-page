@@ -437,19 +437,44 @@ function HomePage() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? `bg-gradient-to-br ${currentTheme.gradient}` : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-16 max-w-5xl">
-        {/* Dark Mode Toggle Button - Friendly Style */}
-        <div className="flex justify-end mb-6">
+        {/* Action Buttons - Share and Dark Mode */}
+        <div className="flex justify-between items-center mb-6">
+          {/* Share Button */}
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: profile.name,
+                  text: profile.bio || `تحقق من صفحة ${profile.name}`,
+                  url: window.location.href
+                }).catch(err => console.log('Error sharing:', err))
+              } else {
+                // Fallback: Copy to clipboard
+                navigator.clipboard.writeText(window.location.href)
+                alert('تم نسخ الرابط!')
+              }
+            }}
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg hover:shadow-xl ${
+              isDarkMode
+                ? 'bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50'
+                : 'bg-black/10 hover:bg-black/20 border border-black/20 hover:border-black/30'
+            }`}
+            aria-label="مشاركة الصفحة"
+          >
+            <span className="text-2xl">🔗</span>
+          </button>
+
+          {/* Dark Mode Toggle Button - Emoji Only */}
           <button
             onClick={toggleDarkMode}
-            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-              isDarkMode 
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg hover:shadow-xl border-2 border-indigo-400/30' 
-                : 'bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-white shadow-lg hover:shadow-xl border-2 border-yellow-300/30'
+            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full backdrop-blur-md transition-all duration-300 transform hover:scale-110 active:scale-95 flex items-center justify-center shadow-lg hover:shadow-xl ${
+              isDarkMode
+                ? 'bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50'
+                : 'bg-black/10 hover:bg-black/20 border border-black/20 hover:border-black/30'
             }`}
             aria-label={isDarkMode ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
           >
             <span className="text-2xl animate-pulse">{isDarkMode ? '🌙' : '☀️'}</span>
-            <span className="text-sm font-semibold">{isDarkMode ? 'الوضع الداكن' : 'الوضع الفاتح'}</span>
           </button>
         </div>
 
