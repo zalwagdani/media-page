@@ -5,15 +5,8 @@ import LoginPage from './pages/LoginPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
-  // Determine basename based on domain
-  // For custom domains (wasl.bio), use root /
-  // For deployment with subdirectory (localhost:5173/media-page), use BASE_URL
-  const isCustomDomain = window.location.hostname !== 'localhost' &&
-                         window.location.hostname !== '127.0.0.1' &&
-                         !window.location.hostname.includes('vercel.app') &&
-                         !window.location.hostname.includes('netlify.app')
-
-  const basename = isCustomDomain ? '/' : (import.meta.env.BASE_URL || '/')
+  // Always use root path since we're using custom domain on GitHub Pages
+  const basename = '/'
 
   return (
     <Router basename={basename}>
