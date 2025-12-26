@@ -7,7 +7,7 @@ function AnonymousMessageButton() {
   const [message, setMessage] = useState('')
   const [category, setCategory] = useState('suggestion') // 'suggestion', 'question', 'opinion'
   const [sending, setSending] = useState(false)
-  const [isEnabled, setIsEnabled] = useState(true)
+  const [isEnabled, setIsEnabled] = useState(null) // null = loading, true = enabled, false = disabled
 
   useEffect(() => {
     // Check if feature is enabled
@@ -54,8 +54,8 @@ function AnonymousMessageButton() {
     }
   }
 
-  // Don't show if disabled
-  if (!isEnabled) return null
+  // Don't show if still loading or disabled
+  if (isEnabled !== true) return null
 
   return (
     <>
