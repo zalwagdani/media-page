@@ -22,7 +22,10 @@ function AdminPage() {
       github: '',
       tiktok: '',
       snapchat: '',
-      youtube: ''
+      youtube: '',
+      whatsapp: '',
+      email: '',
+      phone: ''
     }
   })
   const [codes, setCodes] = useState([])
@@ -78,6 +81,9 @@ function AdminPage() {
               tiktok: '',
               snapchat: '',
               youtube: '',
+              whatsapp: '',
+              email: '',
+              phone: '',
               ...(profileResult.data.socialMedia || {})
             }
           }
@@ -580,7 +586,7 @@ function AdminPage() {
                   {(() => {
                     // Ensure socialMedia exists and has all platforms
                     const socialMedia = profile.socialMedia || {}
-                    const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube']
+                    const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube', 'whatsapp', 'email', 'phone']
                     const platformNames = {
                       twitter: 'تويتر',
                       instagram: 'إنستغرام',
@@ -588,20 +594,35 @@ function AdminPage() {
                       github: 'جيت هاب',
                       tiktok: 'تيك توك',
                       snapchat: 'سناب شات',
-                      youtube: 'يوتيوب'
+                      youtube: 'يوتيوب',
+                      whatsapp: 'واتساب',
+                      email: 'البريد الإلكتروني',
+                      phone: 'رقم الهاتف'
                     }
-                    
+                    const platformPlaceholders = {
+                      twitter: 'https://twitter.com/yourusername',
+                      instagram: 'https://instagram.com/yourusername',
+                      linkedin: 'https://linkedin.com/in/yourusername',
+                      github: 'https://github.com/yourusername',
+                      tiktok: 'https://tiktok.com/@yourusername',
+                      snapchat: 'https://snapchat.com/add/yourusername',
+                      youtube: 'https://youtube.com/@yourusername',
+                      whatsapp: '966501234567',
+                      email: 'your.email@example.com',
+                      phone: '966501234567'
+                    }
+
                     return platforms.map((platform) => (
                       <div key={platform}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           {platformNames[platform] || platform}
                         </label>
                         <input
-                          type="url"
+                          type={platform === 'email' ? 'email' : (platform === 'phone' || platform === 'whatsapp') ? 'tel' : 'url'}
                           value={socialMedia[platform] || ''}
                           onChange={(e) => handleProfileChange(`social.${platform}`, e.target.value)}
                           className="w-full px-3 sm:px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
-                          placeholder={`https://${platform}.com/yourusername`}
+                          placeholder={platformPlaceholders[platform]}
                         />
                       </div>
                     ))

@@ -80,7 +80,10 @@ export const getProfile = async (pageId = null) => {
           github: '',
           tiktok: 'google.com',
           snapchat: 'google.com',
-          youtube: ''
+          youtube: '',
+          whatsapp: '',
+          email: '',
+          phone: ''
         },
         _isDefault: true // Flag to indicate this is default data
       },
