@@ -5,6 +5,7 @@ import { getPageId } from '../config/supabase'
 function AnonymousMessageButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
+  const [category, setCategory] = useState('suggestion') // 'suggestion', 'question', 'opinion'
   const [sending, setSending] = useState(false)
   const [isEnabled, setIsEnabled] = useState(true)
 
@@ -34,7 +35,7 @@ function AnonymousMessageButton() {
 
     try {
       setSending(true)
-      const result = await addAnonymousMessage(message, getPageId())
+      const result = await addAnonymousMessage(message, getPageId(), category)
 
       if (result.error) {
         alert('حدث خطأ أثناء إرسال الرسالة')
@@ -42,6 +43,7 @@ function AnonymousMessageButton() {
       } else {
         alert('تم إرسال رسالتك بنجاح! 💌')
         setMessage('')
+        setCategory('suggestion')
         setIsOpen(false)
       }
     } catch (error) {
@@ -105,6 +107,46 @@ function AnonymousMessageButton() {
 
             {/* Form */}
             <form onSubmit={handleSubmit}>
+              {/* Category Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">نوع الرسالة</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCategory('suggestion')}
+                    className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      category === 'suggestion'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    💡 اقتراح
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategory('question')}
+                    className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      category === 'question'
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    ❓ سؤال
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategory('opinion')}
+                    className={`py-2.5 px-3 rounded-lg border-2 transition-all text-sm font-medium ${
+                      category === 'opinion'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    💭 رأي
+                  </button>
+                </div>
+              </div>
+
               <div className="mb-4">
                 <textarea
                   value={message}

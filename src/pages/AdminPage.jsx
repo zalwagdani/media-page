@@ -45,6 +45,8 @@ function AdminPage() {
   // Anonymous messages state
   const [messages, setMessages] = useState([])
   const [messagesEnabled, setMessagesEnabled] = useState(true)
+  const [messageFilter, setMessageFilter] = useState('all') // 'all', 'suggestion', 'question', 'opinion'
+  const [expandedMessage, setExpandedMessage] = useState(null) // ID of expanded message
 
   useEffect(() => {
     // Check authentication
@@ -858,18 +860,57 @@ function AdminPage() {
 
             {/* Messages List */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-8">
-              <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4 sm:mb-6">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-                  الرسائل المجهولة ({messages.length})
+                  الرسائل المجهولة ({messages.filter(m => messageFilter === 'all' || m.category === messageFilter).length})
                 </h2>
-                {messages.length > 0 && (
-                  <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-                    {messages.length} رسالة جديدة
-                  </span>
-                )}
               </div>
 
-              {messages.length === 0 ? (
+              {/* Filter Buttons */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <button
+                  onClick={() => setMessageFilter('all')}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                    messageFilter === 'all'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  📋 الكل ({messages.length})
+                </button>
+                <button
+                  onClick={() => setMessageFilter('suggestion')}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                    messageFilter === 'suggestion'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  💡 اقتراحات ({messages.filter(m => m.category === 'suggestion').length})
+                </button>
+                <button
+                  onClick={() => setMessageFilter('question')}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                    messageFilter === 'question'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  ❓ أسئلة ({messages.filter(m => m.category === 'question').length})
+                </button>
+                <button
+                  onClick={() => setMessageFilter('opinion')}
+                  className={`px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                    messageFilter === 'opinion'
+                      ? 'border-purple-500 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                  }`}
+                >
+                  💭 آراء ({messages.filter(m => m.category === 'opinion').length})
+                </button>
+              </div>
+
+              {messages.filter(m => messageFilter === 'all' || m.category === messageFilter).length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">💌</div>
                   <p className="text-gray-500 text-lg mb-2">لا توجد رسائل بعد</p>
@@ -881,44 +922,147 @@ function AdminPage() {
                 </div>
               ) : (
                 <div className="space-y-3 sm:space-y-4">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className="group border-2 border-purple-100 rounded-xl p-4 hover:border-purple-300 hover:shadow-lg transition-all bg-gradient-to-r from-white to-purple-50/30"
-                    >
-                      <div className="flex flex-col sm:flex-row items-start gap-3">
-                        <div className="flex-1 min-w-0 w-full">
-                          <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <span className="text-2xl">👤</span>
-                            <span className="text-sm font-medium text-purple-600">
-                              رسالة مجهولة
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              •
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {new Date(msg.created_at).toLocaleString('ar-SA', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <p className="text-gray-800 text-base sm:text-lg leading-relaxed break-words whitespace-pre-wrap">
-                            {msg.message}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteMessage(msg.id)}
-                          className="sm:opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-xs sm:text-sm font-medium flex-shrink-0 w-full sm:w-auto"
+                  {messages
+                    .filter(m => messageFilter === 'all' || m.category === messageFilter)
+                    .map((msg) => {
+                      const isExpanded = expandedMessage === msg.id
+                      const categoryConfig = {
+                        suggestion: {
+                          icon: '💡',
+                          label: 'اقتراح',
+                          color: 'blue',
+                          bgGradient: 'from-blue-50 to-indigo-50',
+                          borderColor: 'border-blue-200',
+                          hoverBorder: 'hover:border-blue-400',
+                          textColor: 'text-blue-700',
+                          badgeBg: 'bg-blue-100'
+                        },
+                        question: {
+                          icon: '❓',
+                          label: 'سؤال',
+                          color: 'green',
+                          bgGradient: 'from-green-50 to-emerald-50',
+                          borderColor: 'border-green-200',
+                          hoverBorder: 'hover:border-green-400',
+                          textColor: 'text-green-700',
+                          badgeBg: 'bg-green-100'
+                        },
+                        opinion: {
+                          icon: '💭',
+                          label: 'رأي',
+                          color: 'purple',
+                          bgGradient: 'from-purple-50 to-pink-50',
+                          borderColor: 'border-purple-200',
+                          hoverBorder: 'hover:border-purple-400',
+                          textColor: 'text-purple-700',
+                          badgeBg: 'bg-purple-100'
+                        }
+                      }
+
+                      const config = categoryConfig[msg.category] || categoryConfig.suggestion
+
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`group border-2 rounded-xl transition-all cursor-pointer bg-gradient-to-r ${config.bgGradient} ${config.borderColor} ${config.hoverBorder} ${
+                            isExpanded ? 'shadow-xl' : 'hover:shadow-lg'
+                          }`}
+                          onClick={() => setExpandedMessage(isExpanded ? null : msg.id)}
                         >
-                          حذف
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                          {/* Compact View */}
+                          <div className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-10 h-10 ${config.badgeBg} rounded-full flex items-center justify-center flex-shrink-0`}>
+                                <span className="text-xl">{config.icon}</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <span className={`text-sm font-bold ${config.textColor}`}>
+                                    {config.label}
+                                  </span>
+                                  <span className="text-xs text-gray-400">•</span>
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(msg.created_at).toLocaleString('ar-SA', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                                <p className={`text-gray-700 text-sm leading-relaxed ${
+                                  isExpanded ? '' : 'line-clamp-2'
+                                }`}>
+                                  {msg.message}
+                                </p>
+                              </div>
+                              <button
+                                className={`px-2 py-1 rounded-lg transition-all ${
+                                  isExpanded ? 'bg-gray-200 rotate-180' : 'bg-gray-100 group-hover:bg-gray-200'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setExpandedMessage(isExpanded ? null : msg.id)
+                                }}
+                              >
+                                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Expanded View */}
+                          {isExpanded && (
+                            <div className="border-t-2 border-gray-200 p-4 bg-white/50">
+                              <div className="mb-4">
+                                <h4 className="text-xs font-medium text-gray-500 mb-2">نص الرسالة الكامل</h4>
+                                <p className="text-gray-800 text-base leading-relaxed break-words whitespace-pre-wrap bg-white p-4 rounded-lg border border-gray-200">
+                                  {msg.message}
+                                </p>
+                              </div>
+                              <div className="mb-4">
+                                <h4 className="text-xs font-medium text-gray-500 mb-2">تفاصيل</h4>
+                                <div className="bg-white p-3 rounded-lg border border-gray-200 space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">التصنيف:</span>
+                                    <span className={`font-medium ${config.textColor}`}>{config.icon} {config.label}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">التاريخ:</span>
+                                    <span className="text-gray-800">
+                                      {new Date(msg.created_at).toLocaleString('ar-SA', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">عدد الأحرف:</span>
+                                    <span className="text-gray-800">{msg.message.length} حرف</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteMessage(msg.id)
+                                }}
+                                className="w-full px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+                              >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                حذف الرسالة
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                 </div>
               )}
             </div>

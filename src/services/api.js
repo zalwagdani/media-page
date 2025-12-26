@@ -517,7 +517,7 @@ export const deleteProfilePicture = async (picturePath) => {
 /**
  * Add anonymous message
  */
-export const addAnonymousMessage = async (message, pageId = null) => {
+export const addAnonymousMessage = async (message, pageId = null, category = 'suggestion') => {
   const currentPageId = pageId || getPageId()
 
   const { data, error } = await supabase
@@ -525,6 +525,7 @@ export const addAnonymousMessage = async (message, pageId = null) => {
     .insert({
       page_id: currentPageId,
       message: message.trim().substring(0, 100), // Max 100 characters
+      category: category, // 'suggestion', 'question', 'opinion'
       created_at: new Date().toISOString()
     })
     .select()
