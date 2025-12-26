@@ -66,6 +66,18 @@ const PhoneIcon = () => (
   </svg>
 )
 
+const WebsiteIcon = () => (
+  <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+  </svg>
+)
+
+const TelegramIcon = () => (
+  <svg className="w-6 h-6 sm:w-7 sm:h-7" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.67-.52.36-.99.53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.37-.48 1.02-.73 3.99-1.73 6.65-2.87 7.98-3.42 3.8-1.58 4.59-1.85 5.1-1.86.11 0 .37.03.53.17.14.11.17.26.19.38-.01.06-.01.24-.03.38z"/>
+  </svg>
+)
+
 const socialIcons = {
   twitter: <XIcon />,
   instagram: <InstagramIcon />,
@@ -76,7 +88,9 @@ const socialIcons = {
   youtube: <YouTubeIcon />,
   whatsapp: <WhatsAppIcon />,
   email: <EmailIcon />,
-  phone: <PhoneIcon />
+  phone: <PhoneIcon />,
+  website: <WebsiteIcon />,
+  telegram: <TelegramIcon />
 }
 
 function HomePage() {
@@ -318,22 +332,51 @@ function HomePage() {
   const normalizeUrl = (url) => {
     if (!url || !url.trim()) return ''
     const trimmed = url.trim()
-    
+
     // Remove any leading slashes
     const cleaned = trimmed.replace(/^\/+/, '')
-    
+
     // If it already starts with http:// or https://, return as is
     if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
       return cleaned
     }
-    
+
     // If it starts with //, treat as protocol-relative and add https:
     if (cleaned.startsWith('//')) {
       return `https:${cleaned}`
     }
-    
+
     // Otherwise, prepend https://
     return `https://${cleaned}`
+  }
+
+  // Convert YouTube URL to embed URL
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url || !url.trim()) return null
+
+    try {
+      // Handle different YouTube URL formats
+      // https://www.youtube.com/watch?v=VIDEO_ID
+      // https://youtu.be/VIDEO_ID
+      // https://www.youtube.com/embed/VIDEO_ID
+
+      const urlObj = new URL(url.includes('http') ? url : `https://${url}`)
+      let videoId = null
+
+      if (urlObj.hostname.includes('youtube.com')) {
+        videoId = urlObj.searchParams.get('v')
+      } else if (urlObj.hostname === 'youtu.be') {
+        videoId = urlObj.pathname.slice(1)
+      }
+
+      if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`
+      }
+    } catch (e) {
+      console.error('Error parsing YouTube URL:', e)
+    }
+
+    return null
   }
 
   // Process URLs with special handling for email, phone, and whatsapp
@@ -367,6 +410,17 @@ function HomePage() {
       // Otherwise, treat as phone number and convert to wa.me
       const cleanedPhone = trimmedValue.replace(/[^\d+]/g, '')
       return `https://wa.me/${cleanedPhone}`
+    }
+
+    // Telegram: Convert to t.me format
+    if (platform === 'telegram') {
+      // If already a URL, use normalizeUrl
+      if (trimmedValue.startsWith('http://') || trimmedValue.startsWith('https://') || trimmedValue.startsWith('t.me/')) {
+        return normalizeUrl(trimmedValue)
+      }
+      // Otherwise, treat as username and convert to t.me
+      const cleanedUsername = trimmedValue.replace(/^@/, '') // Remove @ if present
+      return `https://t.me/${cleanedUsername}`
     }
 
     // For all other platforms, use normalizeUrl
@@ -499,6 +553,21 @@ function HomePage() {
             )}
           </div>
         </div>
+
+        {/* YouTube Video Section */}
+        {profile.youtube_url && getYouTubeEmbedUrl(profile.youtube_url) && (
+          <div className="mt-8 sm:mt-12 max-w-4xl mx-auto">
+            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl">
+              <iframe
+                src={getYouTubeEmbedUrl(profile.youtube_url)}
+                title="YouTube video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Search Section and Discount Codes Display - Only show if codes exist */}
         {codes.length > 0 && (

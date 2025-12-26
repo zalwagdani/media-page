@@ -17,6 +17,7 @@ function AdminPage() {
     bio: '',
     picture: '',
     theme: 'gradient-purple',
+    youtube_url: '',
     socialMedia: {
       twitter: '',
       instagram: '',
@@ -26,6 +27,8 @@ function AdminPage() {
       snapchat: '',
       youtube: '',
       whatsapp: '',
+      telegram: '',
+      website: '',
       email: '',
       phone: ''
     }
@@ -92,6 +95,8 @@ function AdminPage() {
               snapchat: '',
               youtube: '',
               whatsapp: '',
+              telegram: '',
+              website: '',
               email: '',
               phone: '',
               ...(profileResult.data.socialMedia || {})
@@ -664,6 +669,23 @@ function AdminPage() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  رابط فيديو يوتيوب (اختياري)
+                </label>
+                <input
+                  type="text"
+                  value={profile.youtube_url || ''}
+                  onChange={(e) => handleProfileChange('youtube_url', e.target.value)}
+                  className="w-full px-3 sm:px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 text-sm sm:text-base"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  dir="ltr"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 الصق رابط فيديو يوتيوب وسيظهر في صفحتك الرئيسية
+                </p>
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   ثيم الصفحة (Theme)
                 </label>
@@ -780,7 +802,7 @@ function AdminPage() {
                   {(() => {
                     // Ensure socialMedia exists and has all platforms
                     const socialMedia = profile.socialMedia || {}
-                    const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube', 'whatsapp', 'email', 'phone']
+                    const platforms = ['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube', 'whatsapp', 'telegram', 'website', 'email', 'phone']
                     const platformNames = {
                       twitter: 'تويتر',
                       instagram: 'إنستغرام',
@@ -790,6 +812,8 @@ function AdminPage() {
                       snapchat: 'سناب شات',
                       youtube: 'يوتيوب',
                       whatsapp: 'واتساب',
+                      telegram: 'تلقرام',
+                      website: 'الموقع الإلكتروني',
                       email: 'البريد الإلكتروني',
                       phone: 'رقم الهاتف'
                     }
@@ -802,6 +826,8 @@ function AdminPage() {
                       snapchat: 'https://snapchat.com/add/yourusername',
                       youtube: 'https://youtube.com/@yourusername',
                       whatsapp: '966501234567',
+                      telegram: 'username',
+                      website: 'https://example.com',
                       email: 'your.email@example.com',
                       phone: '966501234567'
                     }

@@ -125,6 +125,7 @@ export const saveProfile = async (profile, pageId = null) => {
     picture: profile.picture,
     picture_path: profile.picture_path || null,
     theme: profile.theme || 'gradient-purple',
+    youtube_url: profile.youtube_url || null,
     social_media: profile.socialMedia || profile.social_media || {}
   }
 
