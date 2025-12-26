@@ -586,28 +586,28 @@ function HomePage() {
         <AnonymousMessageButton theme={currentTheme} isDarkMode={isDarkMode} />
 
         {/* Elegant Footer Signature */}
-        <footer className="mt-16 sm:mt-24 pb-8 sm:pb-12">
+        <footer className="mt-12 sm:mt-16 pb-8 sm:pb-12">
           <div className="text-center">
-            <div className={`inline-block px-8 py-6 rounded-2xl transition-all duration-500 ${
+            <div className={`inline-block px-6 py-4 rounded-2xl transition-all duration-500 ${
               isDarkMode
-                ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-pink-900/30 border border-purple-500/20 shadow-2xl shadow-purple-900/50'
-                : 'bg-gradient-to-br from-white/80 via-purple-50/50 to-pink-50/50 border border-purple-200/40 shadow-2xl shadow-purple-200/50'
+                ? 'bg-gradient-to-br from-purple-900/30 via-indigo-900/20 to-pink-900/30 border border-purple-500/20 shadow-xl shadow-purple-900/30'
+                : 'bg-gradient-to-br from-white/80 via-purple-50/50 to-pink-50/50 border border-purple-200/40 shadow-xl shadow-purple-200/30'
             } backdrop-blur-sm`}>
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-2">
                 {/* Decorative Line */}
-                <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                <div className={`w-12 h-0.5 rounded-full transition-colors duration-500 ${
                   isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
                 }`}></div>
 
                 {/* Main Signature Text */}
-                <p className={`text-lg sm:text-xl font-light tracking-wide transition-colors duration-500 ${
+                <p className={`text-sm sm:text-base font-light tracking-wide transition-colors duration-500 ${
                   isDarkMode ? 'text-purple-200/90' : 'text-gray-600'
                 }`} style={{ fontFamily: '"Playfair Display", serif' }}>
                   Built by
                 </p>
 
                 {/* Creator Name */}
-                <h3 className={`text-3xl sm:text-4xl font-bold tracking-tight transition-all duration-500 bg-gradient-to-r ${
+                <h3 className={`text-xl sm:text-2xl font-bold tracking-tight transition-all duration-500 bg-gradient-to-r ${
                   isDarkMode
                     ? 'from-purple-300 via-pink-300 to-blue-300 text-transparent bg-clip-text'
                     : 'from-purple-600 via-pink-600 to-blue-600 text-transparent bg-clip-text'
@@ -616,7 +616,7 @@ function HomePage() {
                 </h3>
 
                 {/* Decorative Line */}
-                <div className={`w-16 h-0.5 rounded-full transition-colors duration-500 ${
+                <div className={`w-12 h-0.5 rounded-full transition-colors duration-500 ${
                   isDarkMode ? 'bg-gradient-to-r from-transparent via-purple-400 to-transparent' : 'bg-gradient-to-r from-transparent via-purple-500 to-transparent'
                 }`}></div>
               </div>
