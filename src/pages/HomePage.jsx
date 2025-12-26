@@ -4,6 +4,7 @@ import { getProfile, getCodes, checkSubscription } from '../services/api'
 import { getPageId } from '../config/supabase'
 import AnonymousMessageButton from '../components/AnonymousMessageButton'
 import PageNotFoundPage from './PageNotFoundPage'
+import { getTheme } from '../config/themes'
 
 // Social Media Icon Components
 const TikTokIcon = () => (
@@ -371,8 +372,11 @@ function HomePage() {
     .filter(([_, url]) => url && url.trim() !== '')
     .map(([platform, url]) => [platform, processUrl(platform, url)])
 
+  // Get theme configuration
+  const currentTheme = getTheme(profile.theme || 'gradient-purple')
+
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
+    <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? `bg-gradient-to-br ${currentTheme.gradient}` : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-16 max-w-5xl">
         {/* Dark Mode Toggle Button - Friendly Style */}
         <div className="flex justify-end mb-6">

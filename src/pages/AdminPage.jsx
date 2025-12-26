@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
+import { themes } from '../config/themes'
 
 function AdminPage() {
   const { pageId: routePageId } = useParams()
@@ -15,6 +16,7 @@ function AdminPage() {
     name: '',
     bio: '',
     picture: '',
+    theme: 'gradient-purple',
     socialMedia: {
       twitter: '',
       instagram: '',
@@ -651,6 +653,48 @@ function AdminPage() {
                     {(profile.bio || '').length}/50 حرف
                   </span>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  ثيم الصفحة (Theme)
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {Object.entries(themes).map(([key, theme]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleProfileChange('theme', key)}
+                      className={`relative group p-4 rounded-xl border-2 transition-all ${
+                        profile.theme === key
+                          ? 'border-blue-500 shadow-lg scale-105'
+                          : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                      }`}
+                    >
+                      {/* Theme Preview */}
+                      <div className={`w-full h-16 rounded-lg bg-gradient-to-br ${theme.gradient} mb-2 flex items-center justify-center text-3xl`}>
+                        {theme.icon}
+                      </div>
+
+                      {/* Theme Name */}
+                      <p className="text-xs font-medium text-gray-700 text-center">
+                        {theme.name}
+                      </p>
+
+                      {/* Selected Indicator */}
+                      {profile.theme === key && (
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  اختر الثيم الذي يناسب ذوقك - سيتم تطبيقه على صفحتك الرئيسية
+                </p>
               </div>
 
               <div>
