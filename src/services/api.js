@@ -603,3 +603,107 @@ export const isAnonymousMessagesEnabled = async (pageId = null) => {
 
   return { enabled: data.anonymous_messages_enabled !== false, error: null }
 }
+
+// ==================== SUBSCRIPTION OPERATIONS ====================
+
+/**
+ * Check if subscription is valid for a page
+ */
+export const checkSubscription = async (pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  try {
+    // Call the PostgreSQL function to check if subscription is valid
+    const { data, error } = await supabase
+      .rpc('is_subscription_valid', { p_page_id: currentPageId })
+
+    if (error) {
+      console.error('Error checking subscription:', error)
+      return { isValid: false, error }
+    }
+
+    return { isValid: data, error: null }
+  } catch (error) {
+    console.error('Error in checkSubscription:', error)
+    return { isValid: false, error }
+  }
+}
+
+/**
+ * Get subscription details for a page
+ */
+export const getSubscriptionDetails = async (pageId = null) => {
+  const currentPageId = pageId || getPageId()
+
+  try {
+    // Call the PostgreSQL function to get subscription details
+    const { data, error } = await supabase
+      .rpc('get_subscription_details', { p_page_id: currentPageId })
+
+    if (error) {
+      console.error('Error getting subscription details:', error)
+      return { data: null, error }
+    }
+
+    // Return the first result (should only be one per page)
+    return { data: data && data.length > 0 ? data[0] : null, error: null }
+  } catch (error) {
+    console.error('Error in getSubscriptionDetails:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Create or update subscription for a page
+ */
+export const createSubscription = async (pageId, planType, durationDays, isTrial = false) => {
+  const currentPageId = pageId || getPageId()
+
+  // Calculate end date
+  const startDate = new Date()
+  const endDate = new Date()
+  endDate.setDate(endDate.getDate() + durationDays)
+
+  // Check if subscription already exists
+  const { data: existing } = await supabase
+    .from('subscriptions')
+    .select('id')
+    .eq('page_id', currentPageId)
+    .maybeSingle()
+
+  if (existing) {
+    // Update existing subscription
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .update({
+        plan_type: planType,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        is_active: true,
+        is_trial: isTrial,
+        payment_status: 'paid'
+      })
+      .eq('page_id', currentPageId)
+      .select()
+      .single()
+
+    return { data, error }
+  } else {
+    // Create new subscription
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        page_id: currentPageId,
+        plan_type: planType,
+        start_date: startDate.toISOString(),
+        end_date: endDate.toISOString(),
+        is_active: true,
+        is_trial: isTrial,
+        payment_status: 'paid'
+      })
+      .select()
+      .single()
+
+    return { data, error }
+  }
+}

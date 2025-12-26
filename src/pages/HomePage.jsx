@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { getProfile, getCodes } from '../services/api'
+import { getProfile, getCodes, checkSubscription } from '../services/api'
 import { getPageId } from '../config/supabase'
 import AnonymousMessageButton from '../components/AnonymousMessageButton'
+import PageNotFoundPage from './PageNotFoundPage'
 
 // Social Media Icon Components
 const TikTokIcon = () => (
@@ -86,6 +87,7 @@ function HomePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [imageLoadError, setImageLoadError] = useState(false)
+  const [subscriptionValid, setSubscriptionValid] = useState(null) // null = checking, true = valid, false = invalid
   // Dark mode state - default to true (dark mode)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
@@ -130,11 +132,25 @@ function HomePage() {
           setProfile(defaultProfile)
           setCodes([])
           setFilteredCodes([])
+          setSubscriptionValid(true) // Allow access if Supabase not configured (dev mode)
           setLoading(false)
           return
         }
-        
+
         try {
+          // Check subscription first
+          const subscriptionResult = await checkSubscription(currentPageId)
+
+          if (subscriptionResult.isValid === false) {
+            // Subscription is invalid or expired
+            setSubscriptionValid(false)
+            setLoading(false)
+            return
+          }
+
+          // Subscription is valid, load profile and codes
+          setSubscriptionValid(true)
+
           const [profileResult, codesResult] = await Promise.all([
             getProfile(currentPageId),
             getCodes(currentPageId)
@@ -226,6 +242,11 @@ function HomePage() {
     setIsDarkMode(!isDarkMode)
   }
 
+  // Show page not found if subscription is invalid
+  if (subscriptionValid === false) {
+    return <PageNotFoundPage />
+  }
+
   // Show loading state only if we don't have a profile yet
   if (loading && !profile) {
     return (
@@ -233,8 +254,8 @@ function HomePage() {
         <div className="text-center">
           <div className="text-6xl sm:text-7xl mb-6 animate-bounce">✨</div>
           <div className={`text-xl sm:text-2xl font-bold mb-3 transition-colors duration-300 bg-gradient-to-r ${
-            isDarkMode 
-              ? 'text-transparent bg-clip-text from-purple-300 to-pink-300' 
+            isDarkMode
+              ? 'text-transparent bg-clip-text from-purple-300 to-pink-300'
               : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
           }`}>جاري التحميل...</div>
           <div className={`text-base sm:text-lg transition-colors duration-300 ${isDarkMode ? 'text-purple-200' : 'text-purple-600'}`}>يرجى الانتظار قليلاً 🎈</div>

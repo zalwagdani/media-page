@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled } from '../services/api'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated } from '../services/api'
 import { getPageId } from '../config/supabase'
 
@@ -48,6 +48,11 @@ function AdminPage() {
   const [messageFilter, setMessageFilter] = useState('all') // 'all', 'suggestion', 'question', 'opinion'
   const [expandedMessage, setExpandedMessage] = useState(null) // ID of expanded message
 
+  // Subscription state
+  const [subscription, setSubscription] = useState(null)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const [showExpiredPopup, setShowExpiredPopup] = useState(false)
+
   useEffect(() => {
     // Check authentication
     if (!isAdminAuthenticated()) {
@@ -60,12 +65,13 @@ function AdminPage() {
       try {
         setLoading(true)
         console.log('Loading data for page ID:', currentPageId)
-        
-        const [profileResult, codesResult, messagesResult, enabledResult] = await Promise.all([
+
+        const [profileResult, codesResult, messagesResult, enabledResult, subscriptionResult] = await Promise.all([
           getProfile(currentPageId),
           getCodes(currentPageId),
           getAnonymousMessages(currentPageId),
-          isAnonymousMessagesEnabled(currentPageId)
+          isAnonymousMessagesEnabled(currentPageId),
+          getSubscriptionDetails(currentPageId)
         ])
         
         console.log('Profile result:', profileResult)
@@ -111,6 +117,15 @@ function AdminPage() {
         if (enabledResult) {
           setMessagesEnabled(enabledResult.enabled)
         }
+
+        if (subscriptionResult.data) {
+          setSubscription(subscriptionResult.data)
+          // Show popup if subscription is expired
+          if (subscriptionResult.data.is_expired === true) {
+            setShowExpiredPopup(true)
+          }
+        }
+        setSubscriptionLoading(false)
       } catch (error) {
         console.error('Error loading data:', error)
         alert('حدث خطأ أثناء تحميل البيانات')
@@ -412,6 +427,90 @@ function AdminPage() {
             </button>
           </div>
         </div>
+
+        {/* Subscription Status Banner */}
+        {!subscriptionLoading && subscription && (
+          <div className={`rounded-xl p-4 sm:p-5 mb-6 sm:mb-8 border-2 ${
+            subscription.is_expired
+              ? 'bg-gradient-to-r from-red-50 to-orange-50 border-red-300'
+              : subscription.days_remaining <= 7 && subscription.days_remaining > 0
+              ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'
+              : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300'
+          }`}>
+            <div className="flex items-start gap-3">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                subscription.is_expired
+                  ? 'bg-red-500'
+                  : subscription.days_remaining <= 7 && subscription.days_remaining > 0
+                  ? 'bg-yellow-500'
+                  : 'bg-green-500'
+              }`}>
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {subscription.is_expired ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-gray-800 mb-2 text-base sm:text-lg">حالة الاشتراك</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-600">نوع الخطة:</span>
+                    <span className="font-bold text-gray-800 mr-2">
+                      {subscription.plan_type === 'monthly' ? '📅 شهري' : '📆 سنوي'}
+                      {subscription.is_trial && ' (تجريبي)'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">تاريخ الانتهاء:</span>
+                    <span className={`font-medium mr-2 ${
+                      subscription.is_expired ? 'text-red-600' : 'text-gray-800'
+                    }`}>
+                      {new Date(subscription.end_date).toLocaleDateString('ar-SA', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">
+                      {subscription.is_expired ? 'منذ:' : 'الأيام المتبقية:'}
+                    </span>
+                    <span className={`font-bold mr-2 ${
+                      subscription.is_expired
+                        ? 'text-red-600'
+                        : subscription.days_remaining <= 7
+                        ? 'text-orange-600'
+                        : 'text-green-600'
+                    }`}>
+                      {subscription.is_expired
+                        ? `${Math.abs(subscription.days_remaining)} يوم`
+                        : `${subscription.days_remaining} يوم`
+                      }
+                    </span>
+                  </div>
+                </div>
+                {subscription.is_expired && (
+                  <div className="mt-3 bg-red-100 border border-red-400 rounded-lg p-3">
+                    <p className="text-sm text-red-800 font-medium">
+                      🚫 انتهى الاشتراك! الصفحة غير متاحة للزوار. يرجى التواصل مع الدعم للتجديد فوراً
+                    </p>
+                  </div>
+                )}
+                {!subscription.is_expired && subscription.days_remaining <= 7 && subscription.days_remaining > 0 && (
+                  <div className="mt-3 bg-yellow-100 border border-yellow-400 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ اشتراكك سينتهي قريباً! يرجى التواصل مع الدعم للتجديد
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Media Page URL Display */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5 mb-6 sm:mb-8">
@@ -1069,6 +1168,101 @@ function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Subscription Expired Popup */}
+      {showExpiredPopup && subscription && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-scale-in">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-3">
+              انتهى الاشتراك
+            </h2>
+
+            {/* Message */}
+            <p className="text-center text-gray-600 mb-6">
+              عزيزي المستخدم، اشتراكك في الخدمة قد انتهى منذ{' '}
+              <span className="font-bold text-red-600">
+                {Math.abs(subscription.days_remaining)} يوم
+              </span>
+              . الصفحة غير متاحة للزوار حالياً.
+            </p>
+
+            {/* Details Box */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">نوع الخطة:</span>
+                <span className="font-medium text-gray-800">
+                  {subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">تاريخ الانتهاء:</span>
+                <span className="font-medium text-gray-800">
+                  {new Date(subscription.end_date).toLocaleDateString('ar-SA', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Call to Action */}
+            <p className="text-center text-sm text-gray-700 mb-6">
+              💡 يرجى التواصل مع فريق الدعم لتجديد اشتراكك وإعادة تفعيل الصفحة
+            </p>
+
+            {/* Buttons */}
+            <div className="space-y-3">
+              <a
+                href="mailto:support@example.com"
+                className="block w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-center"
+              >
+                📧 تواصل عبر البريد الإلكتروني
+              </a>
+              <a
+                href="https://wa.me/966500000000"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-center"
+              >
+                💬 تواصل عبر واتساب
+              </a>
+              <button
+                onClick={() => setShowExpiredPopup(false)}
+                className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes scale-in {
+          from {
+            transform: scale(0.9);
+            opacity: 0;
+          }
+          to {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.2s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
