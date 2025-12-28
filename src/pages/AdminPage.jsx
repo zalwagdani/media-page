@@ -39,6 +39,7 @@ function AdminPage() {
   const [subscription, setSubscription] = useState(null)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
   const [showExpiredPopup, setShowExpiredPopup] = useState(false)
+  const [showSubscriptionCard, setShowSubscriptionCard] = useState(true)
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
@@ -316,14 +317,23 @@ function AdminPage() {
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Subscription Status */}
-        {!subscriptionLoading && subscription && (
-          <div className={`rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 shadow-lg ${
+        {!subscriptionLoading && subscription && showSubscriptionCard && (
+          <div className={`rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 shadow-lg relative ${
             subscription.is_expired
               ? 'bg-gradient-to-r from-red-100 to-pink-100 border-red-400'
               : subscription.days_remaining <= 7
               ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-400'
               : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-400'
           }`}>
+            <button
+              onClick={() => setShowSubscriptionCard(false)}
+              className="absolute top-3 left-3 sm:top-4 sm:left-4 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center transition-all group"
+              title="إخفاء"
+            >
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${
                 subscription.is_expired ? 'bg-red-500' : subscription.days_remaining <= 7 ? 'bg-yellow-500' : 'bg-green-500'
