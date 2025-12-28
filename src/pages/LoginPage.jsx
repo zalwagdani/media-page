@@ -1,31 +1,12 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useLocation, Link, useParams } from 'react-router-dom'
-import { isAdminAuthenticated, authenticateAdmin } from '../services/api'
-import { getPageId } from '../config/supabase'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { supabase } from '../config/supabase'
 
 function LoginPage() {
-  const { pageId: routePageId } = useParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  // Get current page ID
-  const currentPageId = routePageId || getPageId()
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAdminAuthenticated()) {
-      const adminPageId = sessionStorage.getItem('admin_page_id')
-      if (adminPageId === currentPageId) {
-        // Redirect to admin page for current page
-        const adminPath = routePageId ? `/${routePageId}/admin` : '/admin'
-        navigate(adminPath, { replace: true })
-      }
-    }
-  }, [navigate, currentPageId, routePageId])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -33,23 +14,59 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      console.log('Attempting login for page:', currentPageId)
-      const result = await authenticateAdmin(email, password, currentPageId)
+      console.log('Attempting to sign in')
 
-      if (result.success) {
-        // Redirect to admin page for the current page
-        const adminPath = routePageId ? `/${routePageId}/admin` : '/admin'
-        const from = location.state?.from?.pathname || adminPath
-        navigate(from, { replace: true })
-      } else {
-        setError(result.error || 'البريد الإلكتروني أو كلمة المرور غير صحيحة')
-        setPassword('')
+      // Sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (authError) {
+        console.error('Auth error:', authError)
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة')
+        } else {
+          setError('حدث خطأ أثناء تسجيل الدخول')
+        }
         setLoading(false)
+        return
       }
+
+      console.log('Auth successful, getting user page...')
+
+      // Get user's page from admins table
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('page_id')
+        .eq('user_id', authData.user.id)
+        .single()
+
+      console.log('Admin data:', { adminData, adminError })
+
+      if (adminError || !adminData) {
+        // Sign out the user if they don't have a page
+        await supabase.auth.signOut()
+        setError('لم يتم العثور على صفحة لهذا المستخدم')
+        setLoading(false)
+        return
+      }
+
+      const userPageId = adminData.page_id
+      console.log('User is admin of page:', userPageId)
+
+      // Store admin session
+      sessionStorage.setItem('admin_authenticated', 'true')
+      sessionStorage.setItem('admin_user_id', authData.user.id)
+      sessionStorage.setItem('admin_page_id', userPageId)
+
+      console.log('Auth successful, redirecting to:', `/${userPageId}/admin`)
+
+      // Redirect to user's admin page
+      window.location.href = `/${userPageId}/admin`
     } catch (err) {
       console.error('Login error:', err)
-      setError('حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.')
-      setPassword('')
+      setError('حدث خطأ أثناء تسجيل الدخول')
       setLoading(false)
     }
   }
@@ -64,10 +81,7 @@ function LoginPage() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-300 mb-2">تسجيل الدخول</h1>
-          <p className="text-purple-200 text-sm">أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى لوحة التحكم</p>
-          {currentPageId && currentPageId !== 'default' && (
-            <p className="text-purple-300/80 text-xs mt-2">الصفحة: {currentPageId}</p>
-          )}
+          <p className="text-purple-200 text-sm">أدخل بياناتك لتسجيل الدخول</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -128,7 +142,7 @@ function LoginPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                جاري التحقق...
+                جاري تسجيل الدخول...
               </span>
             ) : (
               'تسجيل الدخول'

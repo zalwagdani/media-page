@@ -304,11 +304,9 @@ export const updateCode = async (codeId, updates, pageId = null) => {
  * Authenticate admin user
  */
 export const authenticateAdmin = async (email, password, pageId = null) => {
-  const currentPageId = pageId || getPageId()
-  
-  console.log('Authenticating admin for page:', currentPageId)
+  console.log('Authenticating admin, requested page:', pageId)
   console.log('Email:', email)
-  
+
   // Sign in with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
@@ -328,49 +326,43 @@ export const authenticateAdmin = async (email, password, pageId = null) => {
   }
 
   console.log('Auth successful, user ID:', authData.user.id)
-  console.log('Checking admin access for page:', currentPageId)
 
-  // Check if user has admin access to this page
+  // Get user's page from admins table
   const { data: adminData, error: adminError } = await supabase
     .from('admins')
-    .select('*')
+    .select('page_id')
     .eq('user_id', authData.user.id)
-    .eq('page_id', currentPageId)
     .single()
 
-  console.log('Admin check result:', { adminData, adminError })
+  console.log('Admin data:', { adminData, adminError })
 
   if (adminError || !adminData) {
     await supabase.auth.signOut()
-    
-    // Check if user is admin of any page
-    const { data: anyAdminData } = await supabase
-      .from('admins')
-      .select('page_id')
-      .eq('user_id', authData.user.id)
-    
-    console.log('User is admin of pages:', anyAdminData)
-    
-    if (anyAdminData && anyAdminData.length > 0) {
-      return { 
-        success: false, 
-        error: `ليس لديك صلاحية إدارية لصفحة "${currentPageId}". أنت مسؤول لصفحة: ${anyAdminData.map(a => a.page_id).join(', ')}` 
-      }
-    } else {
-      return { 
-        success: false, 
-        error: `ليس لديك صلاحية إدارية لصفحة "${currentPageId}". يرجى التأكد من إنشاء حساب مسؤول لهذه الصفحة.` 
-      }
+    return {
+      success: false,
+      error: 'لم يتم العثور على صفحة لهذا المستخدم'
     }
   }
 
-  // Store admin session
+  const userPageId = adminData.page_id
+  console.log('User is admin of page:', userPageId)
+
+  // If a specific page was requested (not null), verify user has access to it
+  if (pageId && pageId !== userPageId) {
+    await supabase.auth.signOut()
+    return {
+      success: false,
+      error: `ليس لديك صلاحية الوصول إلى صفحة ${pageId}. صفحتك هي: ${userPageId}`
+    }
+  }
+
+  // Store admin session with user's actual page ID
   sessionStorage.setItem('admin_authenticated', 'true')
   sessionStorage.setItem('admin_user_id', authData.user.id)
-  sessionStorage.setItem('admin_page_id', currentPageId)
+  sessionStorage.setItem('admin_page_id', userPageId)
 
-  console.log('Authentication successful!')
-  return { success: true, user: authData.user }
+  console.log('Authentication successful! Page ID:', userPageId)
+  return { success: true, user: authData.user, pageId: userPageId }
 }
 
 /**
