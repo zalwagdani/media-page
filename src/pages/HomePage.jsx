@@ -112,6 +112,8 @@ function HomePage() {
     const saved = localStorage.getItem('darkMode')
     return saved !== null ? saved === 'true' : true // Default to dark mode
   })
+  // Pill container auto-hide state
+  const [isPillVisible, setIsPillVisible] = useState(true)
 
   useEffect(() => {
     const loadData = async () => {
@@ -261,6 +263,53 @@ function HomePage() {
   useEffect(() => {
     localStorage.setItem('darkMode', isDarkMode.toString())
   }, [isDarkMode])
+
+  // Premium auto-hide behavior for pill container
+  useEffect(() => {
+    let hideTimer
+
+    const resetTimer = () => {
+      // Show pill immediately
+      setIsPillVisible(true)
+
+      // Clear existing timer
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+      }
+
+      // Set new timer to hide after 3 seconds
+      hideTimer = setTimeout(() => {
+        setIsPillVisible(false)
+      }, 3000)
+    }
+
+    // User interaction events that should show the pill
+    const handleUserInteraction = () => {
+      resetTimer()
+    }
+
+    // Show pill on page load and start initial timer
+    resetTimer()
+
+    // Add event listeners for all user interactions
+    window.addEventListener('click', handleUserInteraction)
+    window.addEventListener('scroll', handleUserInteraction, { passive: true })
+    window.addEventListener('touchstart', handleUserInteraction, { passive: true })
+    window.addEventListener('mousemove', handleUserInteraction)
+    window.addEventListener('keydown', handleUserInteraction)
+
+    // Cleanup
+    return () => {
+      if (hideTimer) {
+        clearTimeout(hideTimer)
+      }
+      window.removeEventListener('click', handleUserInteraction)
+      window.removeEventListener('scroll', handleUserInteraction)
+      window.removeEventListener('touchstart', handleUserInteraction)
+      window.removeEventListener('mousemove', handleUserInteraction)
+      window.removeEventListener('keydown', handleUserInteraction)
+    }
+  }, [])
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode)
@@ -442,12 +491,16 @@ function HomePage() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${isDarkMode ? `bg-gradient-to-br ${currentTheme.gradient}` : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-16 max-w-5xl">
-        {/* Premium Glassmorphism Action Buttons - Fixed Pill Container */}
+        {/* Premium Glassmorphism Action Buttons - Fixed Pill Container with Auto-Hide */}
         <div className="fixed top-4 right-4 z-50" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <div className={`flex items-center gap-2 px-2 py-2 rounded-full backdrop-blur-xl transition-all duration-300 shadow-2xl ${
+          <div className={`flex items-center gap-2 px-2 py-2 rounded-full backdrop-blur-xl shadow-2xl transition-all duration-500 ease-in-out ${
             isDarkMode
               ? `bg-white/10 border border-white/20 ${currentTheme.glow}`
               : 'bg-white/40 border border-white/60 shadow-black/10'
+          } ${
+            isPillVisible
+              ? 'opacity-100 translate-x-0 translate-y-0'
+              : 'opacity-0 translate-x-4 -translate-y-2 pointer-events-none'
           }`}>
             {/* Share Button */}
             <button
