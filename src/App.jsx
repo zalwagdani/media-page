@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import AdminPage from './pages/AdminPage'
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -11,8 +12,8 @@ function App() {
   return (
     <Router basename={basename}>
       <Routes>
-        {/* Root path - can be home page or default user page */}
-        <Route path="/" element={<HomePage />} />
+        {/* Root path - Landing page */}
+        <Route path="/" element={<LandingPage />} />
 
         {/* Traditional /page/:pageId format */}
         <Route path="/page/:pageId" element={<HomePage />} />
