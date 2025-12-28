@@ -269,30 +269,31 @@ function AdminPage() {
       {/* Modern Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   لوحة التحكم
                 </h1>
-                <p className="text-sm text-gray-500">إدارة صفحتك الشخصية</p>
+                <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">إدارة صفحتك الشخصية</p>
               </div>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => window.open(getMediaPageUrl(), '_blank')}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-base"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                عرض الصفحة
+                <span className="hidden sm:inline">عرض الصفحة</span>
+                <span className="sm:hidden">عرض</span>
               </button>
               <button
                 onClick={() => {
@@ -301,12 +302,12 @@ function AdminPage() {
                     window.location.href = getMediaPageUrl()
                   }
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-medium text-xs sm:text-base"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                خروج
+                <span className="hidden sm:inline">خروج</span>
               </button>
             </div>
           </div>
@@ -316,35 +317,35 @@ function AdminPage() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Subscription Status */}
         {!subscriptionLoading && subscription && (
-          <div className={`rounded-2xl p-6 mb-8 border-2 shadow-lg ${
+          <div className={`rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 shadow-lg ${
             subscription.is_expired
               ? 'bg-gradient-to-r from-red-100 to-pink-100 border-red-400'
               : subscription.days_remaining <= 7
               ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-400'
               : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-400'
           }`}>
-            <div className="flex items-center gap-4">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${
                 subscription.is_expired ? 'bg-red-500' : subscription.days_remaining <= 7 ? 'bg-yellow-500' : 'bg-green-500'
               }`}>
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">حالة الاشتراك</h3>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="flex-1 w-full">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3">حالة الاشتراك</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <span className="text-sm text-gray-600">الخطة:</span>
-                    <p className="font-bold text-gray-800">{subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}</p>
+                    <span className="text-xs sm:text-sm text-gray-600">الخطة:</span>
+                    <p className="font-bold text-sm sm:text-base text-gray-800">{subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">الانتهاء:</span>
-                    <p className="font-medium text-gray-800">{new Date(subscription.end_date).toLocaleDateString('ar-SA')}</p>
+                    <span className="text-xs sm:text-sm text-gray-600">الانتهاء:</span>
+                    <p className="font-medium text-sm sm:text-base text-gray-800">{new Date(subscription.end_date).toLocaleDateString('ar-SA')}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-600">المتبقي:</span>
-                    <p className={`font-bold ${subscription.is_expired ? 'text-red-600' : 'text-green-600'}`}>
+                    <span className="text-xs sm:text-sm text-gray-600">المتبقي:</span>
+                    <p className={`font-bold text-sm sm:text-base ${subscription.is_expired ? 'text-red-600' : 'text-green-600'}`}>
                       {subscription.is_expired ? `انتهى منذ ${Math.abs(subscription.days_remaining)} يوم` : `${subscription.days_remaining} يوم`}
                     </p>
                   </div>
@@ -375,53 +376,55 @@ function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg mb-8 p-2">
-          <div className="grid grid-cols-3 gap-2">
+        <div className="bg-white rounded-2xl shadow-lg mb-6 sm:mb-8 p-2">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold transition-all ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all text-xs sm:text-base ${
                 activeTab === 'profile'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              الملف الشخصي
+              <span className="hidden sm:inline">الملف الشخصي</span>
+              <span className="sm:hidden">الملف</span>
             </button>
             <button
               onClick={() => setActiveTab('codes')}
-              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold transition-all ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all text-xs sm:text-base ${
                 activeTab === 'codes'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
-              أكواد الخصم
+              <span className="hidden sm:inline">أكواد الخصم</span>
+              <span className="sm:hidden">الأكواد</span>
               {codes.length > 0 && (
-                <span className="px-2 py-1 bg-white text-purple-600 rounded-full text-xs font-bold">
+                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white text-purple-600 rounded-full text-xs font-bold">
                   {codes.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab('messages')}
-              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold transition-all ${
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all text-xs sm:text-base ${
                 activeTab === 'messages'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
-              الرسائل
+              <span>الرسائل</span>
               {messages.length > 0 && (
-                <span className="px-2 py-1 bg-white text-purple-600 rounded-full text-xs font-bold">
+                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white text-purple-600 rounded-full text-xs font-bold">
                   {messages.length}
                 </span>
               )}
@@ -431,8 +434,8 @@ function AdminPage() {
 
         {/* Content */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="max-w-4xl mx-auto space-y-8">
+          <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+            <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
               {/* Profile Picture */}
               <div className="text-center">
                 <div className="relative inline-block mb-4">
@@ -520,9 +523,9 @@ function AdminPage() {
 
               {/* Theme & Layout */}
               <div>
-                <label className="block text-lg font-bold text-gray-800 mb-4">🎨 تصميم الصفحة</label>
-                <p className="text-sm text-gray-600 mb-4">💡 اختر تخطيط الصفحة - كيف تريد أن تظهر الأزرار والمحتوى</p>
-                <div className="grid grid-cols-3 gap-4">
+                <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🎨 تصميم الصفحة</label>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">💡 اختر تخطيط الصفحة - كيف تريد أن تظهر الأزرار والمحتوى</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   {Object.entries(layouts).map(([key, layout]) => (
                     <button
                       key={key}
@@ -542,9 +545,9 @@ function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-lg font-bold text-gray-800 mb-4"> ثيم الألوان</label>
-                <p className="text-sm text-gray-600 mb-4">💡 اختر مجموعة الألوان التي تناسب ذوقك - سيتم تطبيقها على كامل الصفحة</p>
-                <div className="grid grid-cols-5 gap-3">
+                <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🌈 ثيم الألوان</label>
+                <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">💡 اختر مجموعة الألوان التي تناسب ذوقك - سيتم تطبيقها على كامل الصفحة</p>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
                   {Object.entries(themes).map(([key, theme]) => (
                     <button
                       key={key}
@@ -617,9 +620,9 @@ function AdminPage() {
         )}
 
         {activeTab === 'codes' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Add/Edit Code Form */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 {editingCode ? '✏️ تعديل كود الخصم' : '➕ إضافة كود خصم جديد'}
               </h2>
@@ -693,8 +696,8 @@ function AdminPage() {
             </div>
 
             {/* Codes List */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">أكواد الخصم ({codes.length})</h2>
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">أكواد الخصم ({codes.length})</h2>
               {codes.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🏷️</div>
@@ -744,9 +747,9 @@ function AdminPage() {
         )}
 
         {activeTab === 'messages' && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Settings */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">⚙️ إعدادات الرسائل المجهولة</h2>
               <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
                 <div>
@@ -768,15 +771,15 @@ function AdminPage() {
             </div>
 
             {/* Messages List */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">
+            <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                   الرسائل المجهولة ({messages.filter(m => messageFilter === 'all' || m.category === messageFilter).length})
                 </h2>
               </div>
 
               {/* Filters */}
-              <div className="flex gap-3 mb-6">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
                 {[
                   { key: 'all', label: '📋 الكل', count: messages.length },
                   { key: 'suggestion', label: '💡 اقتراحات', count: messages.filter(m => m.category === 'suggestion').length },
