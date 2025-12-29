@@ -928,7 +928,6 @@ export const trackLinkClick = async (pageId, linkId, linkPlatform) => {
 
 /**
  * Get page views statistics
- * Note: Divides counts by 2 and rounds up (to account for duplicate tracking)
  */
 export const getPageViewsStats = async (pageId, days = 30) => {
   try {
@@ -941,18 +940,18 @@ export const getPageViewsStats = async (pageId, days = 30) => {
 
     if (error) throw error
 
-    // Divide all view counts by 2 and round up
+    // Return actual view counts
     const result = data && data.length > 0 ? data[0] : null
     if (result) {
       return {
         data: {
-          total_views: Math.ceil(parseInt(result.total_views || 0) / 2),
-          today_views: Math.ceil(parseInt(result.today_views || 0) / 2),
-          yesterday_views: Math.ceil(parseInt(result.yesterday_views || 0) / 2),
-          avg_daily_views: Math.ceil(parseFloat(result.avg_daily_views || 0) / 2),
-          mobile_views: Math.ceil(parseInt(result.mobile_views || 0) / 2),
-          tablet_views: Math.ceil(parseInt(result.tablet_views || 0) / 2),
-          desktop_views: Math.ceil(parseInt(result.desktop_views || 0) / 2)
+          total_views: parseInt(result.total_views || 0),
+          today_views: parseInt(result.today_views || 0),
+          yesterday_views: parseInt(result.yesterday_views || 0),
+          avg_daily_views: parseFloat(result.avg_daily_views || 0),
+          mobile_views: parseInt(result.mobile_views || 0),
+          tablet_views: parseInt(result.tablet_views || 0),
+          desktop_views: parseInt(result.desktop_views || 0)
         },
         error: null
       }
@@ -987,7 +986,6 @@ export const getLinkClicksStats = async (pageId) => {
 
 /**
  * Get daily views for chart
- * Note: Divides counts by 2 and rounds up (to account for duplicate tracking)
  */
 export const getDailyViews = async (pageId, days = 7) => {
   try {
@@ -1000,13 +998,13 @@ export const getDailyViews = async (pageId, days = 7) => {
 
     if (error) throw error
 
-    // Divide view counts by 2 and round up
-    const adjustedData = (data || []).map(item => ({
+    // Return actual view counts
+    const actualData = (data || []).map(item => ({
       ...item,
-      view_count: Math.ceil(parseInt(item.view_count || 0) / 2)
+      view_count: parseInt(item.view_count || 0)
     }))
 
-    return { data: adjustedData, error: null }
+    return { data: actualData, error: null }
   } catch (error) {
     console.error('Error getting daily views:', error)
     return { data: [], error }
