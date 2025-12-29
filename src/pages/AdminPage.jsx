@@ -360,18 +360,90 @@ function AdminPage() {
 
   const handleDragStart = (e, link) => {
     setDraggedLink(link)
-    e.dataTransfer.effectAllowed = 'move'
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move'
+    }
   }
 
   const handleDragOver = (e) => {
     e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'move'
+    }
   }
 
   const handleDrop = async (e, targetLink) => {
     e.preventDefault()
 
     if (!draggedLink || draggedLink.id === targetLink.id) return
+
+    const draggedIndex = socialLinks.findIndex(l => l.id === draggedLink.id)
+    const targetIndex = socialLinks.findIndex(l => l.id === targetLink.id)
+
+    const newLinks = [...socialLinks]
+    newLinks.splice(draggedIndex, 1)
+    newLinks.splice(targetIndex, 0, draggedLink)
+
+    setSocialLinks(newLinks)
+    setDraggedLink(null)
+
+    // Update order in database
+    try {
+      await updateSocialLinksOrder(newLinks)
+    } catch (error) {
+      console.error('Error updating order:', error)
+    }
+  }
+
+  // Touch events for mobile drag & drop
+  const handleTouchStart = (e, link) => {
+    setDraggedLink(link)
+    const touch = e.touches[0]
+    const element = e.currentTarget
+    element.style.opacity = '0.5'
+  }
+
+  const handleTouchMove = (e) => {
+    e.preventDefault()
+    const touch = e.touches[0]
+    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+
+    // Find the link card element
+    const linkCard = elementBelow?.closest('[data-link-id]')
+    if (linkCard) {
+      // Add visual feedback
+      document.querySelectorAll('[data-link-id]').forEach(el => {
+        el.classList.remove('border-purple-500')
+      })
+      linkCard.classList.add('border-purple-500')
+    }
+  }
+
+  const handleTouchEnd = async (e, link) => {
+    const element = e.currentTarget
+    element.style.opacity = '1'
+
+    const touch = e.changedTouches[0]
+    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY)
+    const targetCard = elementBelow?.closest('[data-link-id]')
+
+    // Remove all visual feedback
+    document.querySelectorAll('[data-link-id]').forEach(el => {
+      el.classList.remove('border-purple-500')
+    })
+
+    if (!targetCard || !draggedLink) {
+      setDraggedLink(null)
+      return
+    }
+
+    const targetLinkId = targetCard.getAttribute('data-link-id')
+    const targetLink = socialLinks.find(l => l.id === targetLinkId)
+
+    if (!targetLink || draggedLink.id === targetLink.id) {
+      setDraggedLink(null)
+      return
+    }
 
     const draggedIndex = socialLinks.findIndex(l => l.id === draggedLink.id)
     const targetIndex = socialLinks.findIndex(l => l.id === targetLink.id)
@@ -447,50 +519,39 @@ function AdminPage() {
       </div>
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Subscription Status */}
+        {/* Subscription Status - Compact Banner */}
         {!subscriptionLoading && subscription && showSubscriptionCard && (
-          <div className={`rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 shadow-lg relative ${
+          <div className={`rounded-lg sm:rounded-xl p-2.5 sm:p-3 mb-4 border relative ${
             subscription.is_expired
-              ? 'bg-gradient-to-r from-red-100 to-pink-100 border-red-400'
+              ? 'bg-red-50 border-red-300'
               : subscription.days_remaining <= 7
-              ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-yellow-400'
-              : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-400'
+              ? 'bg-yellow-50 border-yellow-300'
+              : 'bg-green-50 border-green-300'
           }`}>
             <button
               onClick={() => setShowSubscriptionCard(false)}
-              className="absolute top-3 left-3 sm:top-4 sm:left-4 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white/50 hover:bg-white flex items-center justify-center transition-all group"
+              className="absolute top-2 left-2 w-5 h-5 rounded-full bg-white/70 hover:bg-white flex items-center justify-center transition-all group"
               title="إخفاء"
             >
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 group-hover:text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 text-gray-500 group-hover:text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${
+            <div className="flex items-center gap-2 sm:gap-3 pr-6">
+              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                 subscription.is_expired ? 'bg-red-500' : subscription.days_remaining <= 7 ? 'bg-yellow-500' : 'bg-green-500'
               }`}>
-                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="flex-1 w-full">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 sm:mb-3">حالة الاشتراك</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div>
-                    <span className="text-xs sm:text-sm text-gray-600">الخطة:</span>
-                    <p className="font-bold text-sm sm:text-base text-gray-800">{subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs sm:text-sm text-gray-600">الانتهاء:</span>
-                    <p className="font-medium text-sm sm:text-base text-gray-800">{new Date(subscription.end_date).toLocaleDateString('ar-SA')}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs sm:text-sm text-gray-600">المتبقي:</span>
-                    <p className={`font-bold text-sm sm:text-base ${subscription.is_expired ? 'text-red-600' : 'text-green-600'}`}>
-                      {subscription.is_expired ? `انتهى منذ ${Math.abs(subscription.days_remaining)} يوم` : `${subscription.days_remaining} يوم`}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm flex-1 min-w-0">
+                <span className="font-semibold text-gray-700 whitespace-nowrap">الاشتراك:</span>
+                <span className="text-gray-600">{subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}</span>
+                <span className="text-gray-400 hidden sm:inline">•</span>
+                <span className={`font-medium ${subscription.is_expired ? 'text-red-600' : subscription.days_remaining <= 7 ? 'text-yellow-700' : 'text-green-600'}`}>
+                  {subscription.is_expired ? `انتهى منذ ${Math.abs(subscription.days_remaining)} يوم` : `${subscription.days_remaining} يوم متبقي`}
+                </span>
               </div>
             </div>
           </div>
@@ -821,14 +882,18 @@ function AdminPage() {
                       {socialLinks.map((link) => (
                         <div
                           key={link.id}
+                          data-link-id={link.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, link)}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleDrop(e, link)}
-                          className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all cursor-move group"
+                          onTouchStart={(e) => handleTouchStart(e, link)}
+                          onTouchMove={handleTouchMove}
+                          onTouchEnd={(e) => handleTouchEnd(e, link)}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all cursor-move group touch-none"
                         >
                           {/* Drag Handle */}
-                          <div className="hidden sm:block text-gray-400 group-hover:text-purple-500 transition-colors">
+                          <div className="text-gray-400 group-hover:text-purple-500 transition-colors flex-shrink-0">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                             </svg>
@@ -879,8 +944,7 @@ function AdminPage() {
                   {/* Drag & Drop Hint */}
                   {socialLinks.length > 1 && (
                     <p className="text-xs text-gray-500 text-center mt-3">
-                      <span className="hidden sm:inline">💡 اسحب الروابط لإعادة ترتيبها</span>
-                      <span className="sm:hidden">💡 استخدم الكمبيوتر لإعادة ترتيب الروابط بالسحب</span>
+                      💡 اسحب الروابط لإعادة ترتيبها (اضغط مطولاً على الجوال)
                     </p>
                   )}
                 </div>
