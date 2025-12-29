@@ -41,45 +41,79 @@ export default function LandingPage() {
         </div>
 
         {/* Features */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 max-w-5xl w-full">
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 max-w-6xl w-full">
+          {/* Arabic Support */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-2xl">🇸🇦</span>
+            </div>
+            <h3 className="text-purple-100 font-bold mb-2 text-lg">دعم كامل للعربية</h3>
+            <p className="text-purple-300 text-sm leading-relaxed">
+              واجهة بالعربي من الألف للياء مع تجربة سهلة ومريحة
+            </p>
+          </div>
+
+          {/* Security */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h3 className="text-green-100 font-bold mb-2 text-lg">آمن ومحمي</h3>
+            <p className="text-green-300 text-sm leading-relaxed">
+              صفحتك محمية بالكامل، بياناتك في أمان تام
+            </p>
+          </div>
+
+          {/* Analytics */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h3 className="text-blue-100 font-bold mb-2 text-lg">إحصائيات دقيقة</h3>
+            <p className="text-blue-300 text-sm leading-relaxed">
+              اعرف كم واحد زار صفحتك وضغط على روابطك
+            </p>
+          </div>
+
+          {/* Themes */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
               </svg>
             </div>
-            <h3 className="text-purple-100 font-bold mb-2">ثيمات متنوعة</h3>
-            <p className="text-purple-300 text-sm">ثيمات ألوان مختلفة</p>
+            <h3 className="text-pink-100 font-bold mb-2 text-lg">ألوان جميلة</h3>
+            <p className="text-pink-300 text-sm leading-relaxed">
+              اختر من ألوان كثيرة تناسب ذوقك
+            </p>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 bg-pink-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Layouts */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
               </svg>
             </div>
-            <h3 className="text-pink-100 font-bold mb-2"> تصاميم</h3>
-            <p className="text-pink-300 text-sm">كلاسيكي، عصري، وبسيط</p>
+            <h3 className="text-indigo-100 font-bold mb-2 text-lg">أكثر من شكل</h3>
+            <p className="text-indigo-300 text-sm leading-relaxed">
+              اختر الشكل اللي يعجبك لصفحتك
+            </p>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+          {/* More Features */}
+          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mb-4">
+              <span className="text-2xl">✨</span>
             </div>
-            <h3 className="text-indigo-100 font-bold mb-2">أكواد الخصم</h3>
-            <p className="text-indigo-300 text-sm">شارك أكواد خصمك</p>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
-            <h3 className="text-green-100 font-bold mb-2">رسائل مجهولة</h3>
-            <p className="text-green-300 text-sm">استقبل رسائل مجهولة</p>
+            <h3 className="text-yellow-100 font-bold mb-2 text-lg">مزايا أخرى</h3>
+            <p className="text-yellow-300 text-sm leading-relaxed">
+              أكواد خصم، رسائل مجهولة، صورة شخصية، وروابط بلا حدود
+            </p>
           </div>
         </div>
 

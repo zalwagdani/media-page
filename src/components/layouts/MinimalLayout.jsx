@@ -14,7 +14,8 @@ export default function MinimalLayout({
   filteredCodes,
   searchTerm,
   setSearchTerm,
-  getYouTubeEmbedUrl
+  getYouTubeEmbedUrl,
+  onLinkClick
 }) {
   return (
     <div className="max-w-3xl mx-auto">
@@ -81,6 +82,7 @@ export default function MinimalLayout({
                   href={url}
                   target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
                   rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}
+                  onClick={() => onLinkClick && onLinkClick({ id, platform, url })}
                   className={`group flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
                     isDarkMode
                       ? `${currentTheme.border} bg-white/5 hover:bg-white/10 hover:${currentTheme.border.replace('/30', '')}`

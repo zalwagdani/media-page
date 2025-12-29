@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails, getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink, updateSocialLinksOrder } from '../services/api'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails, getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink, updateSocialLinksOrder, getPageViewsStats, getLinkClicksStats, getDailyViews } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated, checkPageOwnership } from '../services/api'
 import { getPageId } from '../config/supabase'
 import { themes, getAvailableThemes } from '../config/themes'
@@ -47,6 +47,14 @@ function AdminPage() {
   const [editingLink, setEditingLink] = useState(null)
   const [linkForm, setLinkForm] = useState({ platform: 'instagram', url: '', label: '' })
   const [draggedLink, setDraggedLink] = useState(null)
+
+  // Analytics State
+  const [analyticsStats, setAnalyticsStats] = useState(null)
+  const [linkClicksStats, setLinkClicksStats] = useState([])
+  const [dailyViews, setDailyViews] = useState([])
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsDateRange, setAnalyticsDateRange] = useState(30) // days
+  const [analyticsChartDays, setAnalyticsChartDays] = useState(7) // for daily chart
 
   useEffect(() => {
     if (!isAdminAuthenticated()) {
@@ -110,6 +118,34 @@ function AdminPage() {
 
     loadData()
   }, [navigate, currentPageId])
+
+  // Load analytics when analytics tab is active and user has Premium
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      if (activeTab !== 'analytics' || !subscription || subscription.plan_tier !== 'premium') {
+        return
+      }
+
+      setAnalyticsLoading(true)
+      try {
+        const [statsResult, clicksResult, viewsResult] = await Promise.all([
+          getPageViewsStats(currentPageId, analyticsDateRange),
+          getLinkClicksStats(currentPageId),
+          getDailyViews(currentPageId, analyticsChartDays)
+        ])
+
+        setAnalyticsStats(statsResult.data)
+        setLinkClicksStats(clicksResult.data || [])
+        setDailyViews(viewsResult.data || [])
+      } catch (error) {
+        console.error('Error loading analytics:', error)
+      } finally {
+        setAnalyticsLoading(false)
+      }
+    }
+
+    loadAnalytics()
+  }, [activeTab, currentPageId, subscription, analyticsDateRange, analyticsChartDays])
 
   const handleProfileChange = (field, value) => {
     if (field.startsWith('social.')) {
@@ -594,7 +630,7 @@ function AdminPage() {
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-lg mb-6 sm:mb-8 p-2">
-          <div className="grid grid-cols-3 gap-1 sm:gap-2">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2">
             <button
               onClick={() => setActiveTab('profile')}
               className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all text-xs sm:text-base ${
@@ -646,6 +682,22 @@ function AdminPage() {
                 </span>
               )}
             </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 rounded-xl font-bold transition-all text-xs sm:text-base ${
+                activeTab === 'analytics'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:bg-gray-100'
+              } ${subscription?.plan_tier !== 'premium' ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={subscription?.plan_tier !== 'premium'}
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <span className="hidden sm:inline">الإحصائيات</span>
+              <span className="sm:hidden">الإحصائيات</span>
+              {subscription?.plan_tier === 'premium' && <span className="text-xs">⭐</span>}
+            </button>
           </div>
         </div>
 
@@ -692,7 +744,7 @@ function AdminPage() {
                       onClick={handleRemovePicture}
                       className="px-6 py-3 bg-red-500 text-white rounded-xl hover:shadow-lg transition-all font-bold"
                     >
-                      🗑️ حذف الصورة
+                      ✖️ حذف الصورة
                     </button>
                   )}
                 </div>
@@ -763,7 +815,7 @@ function AdminPage() {
 
               <div>
                 <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
-                  🌈 ثيم الألوان
+                  🎨 ثيم الألوان
                   {subscription && subscription.plan_tier === 'standard' && (
                     <span className="mr-2 text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">⭐ المزيد في Premium</span>
                   )}
@@ -975,7 +1027,7 @@ function AdminPage() {
                               className="flex-1 sm:flex-none px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 active:scale-95 transition-all"
                               title="حذف"
                             >
-                              🗑️ حذف
+                              ✖️ حذف
                             </button>
                           </div>
                         </div>
@@ -1103,7 +1155,7 @@ function AdminPage() {
                             onClick={() => handleDeleteCode(code.id)}
                             className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium"
                           >
-                            🗑️ حذف
+                            ✖️ حذف
                           </button>
                         </div>
                       </div>
@@ -1263,7 +1315,7 @@ function AdminPage() {
                           onClick={() => handleDeleteMessage(msg.id)}
                           className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-bold"
                         >
-                          🗑️ حذف
+                          ✖️ حذف
                         </button>
                       </div>
                     )
@@ -1271,6 +1323,256 @@ function AdminPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            {/* Premium Check */}
+            {subscription?.plan_tier !== 'premium' ? (
+              <div className="bg-gradient-to-r from-purple-100 via-pink-100 to-purple-100 border-2 border-purple-300 rounded-2xl p-8 text-center">
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">الإحصائيات ميزة حصرية</h3>
+                <p className="text-gray-700 mb-4">
+                  احصل على إحصائيات متقدمة عن زوار صفحتك ونقرات الروابط بالترقية إلى باقة Premium
+                </p>
+                <div className="inline-block bg-white px-6 py-3 rounded-xl font-bold text-purple-600 shadow-md">
+                  ⭐ ترقية إلى Premium
+                </div>
+              </div>
+            ) : analyticsLoading ? (
+              <div className="bg-white rounded-2xl p-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4"></div>
+                <p className="text-gray-600">جاري تحميل الإحصائيات...</p>
+              </div>
+            ) : (
+              <>
+                {/* Date Range Filter */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-1">📅 الفترة الزمنية</h3>
+                      <p className="text-sm text-gray-600">اختر المدة لعرض الإحصائيات</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => { setAnalyticsDateRange(1); setAnalyticsChartDays(1); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          analyticsDateRange === 1
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        اليوم
+                      </button>
+                      <button
+                        onClick={() => { setAnalyticsDateRange(7); setAnalyticsChartDays(7); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          analyticsDateRange === 7
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        أسبوع
+                      </button>
+                      <button
+                        onClick={() => { setAnalyticsDateRange(30); setAnalyticsChartDays(30); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          analyticsDateRange === 30
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        شهر
+                      </button>
+                      <button
+                        onClick={() => { setAnalyticsDateRange(90); setAnalyticsChartDays(90); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          analyticsDateRange === 90
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        3 شهور
+                      </button>
+                      <button
+                        onClick={() => { setAnalyticsDateRange(365); setAnalyticsChartDays(365); }}
+                        className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                          analyticsDateRange === 365
+                            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        سنة
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats Overview Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Total Views */}
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-6 shadow-lg">
+                    <div className="text-3xl mb-2">👀</div>
+                    <div className="text-3xl font-bold mb-1">{analyticsStats?.total_views || 0}</div>
+                    <div className="text-sm opacity-90">إجمالي المشاهدات</div>
+                    <div className="text-xs mt-2 opacity-75">
+                      {analyticsDateRange === 1 ? 'اليوم' :
+                       analyticsDateRange === 7 ? 'آخر أسبوع' :
+                       analyticsDateRange === 30 ? 'آخر 30 يوم' :
+                       analyticsDateRange === 90 ? 'آخر 3 شهور' :
+                       'آخر سنة'}
+                    </div>
+                  </div>
+
+                  {/* Today Views */}
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 shadow-lg">
+                    <div className="text-3xl mb-2">📅</div>
+                    <div className="text-3xl font-bold mb-1">{analyticsStats?.today_views || 0}</div>
+                    <div className="text-sm opacity-90">مشاهدات اليوم</div>
+                    <div className="text-xs mt-2 opacity-75">
+                      {analyticsStats?.yesterday_views ? `أمس: ${analyticsStats.yesterday_views}` : 'لا توجد بيانات أمس'}
+                    </div>
+                  </div>
+
+                  {/* Average Daily */}
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 shadow-lg">
+                    <div className="text-3xl mb-2">📊</div>
+                    <div className="text-3xl font-bold mb-1">{analyticsStats?.avg_daily_views || 0}</div>
+                    <div className="text-sm opacity-90">متوسط يومي</div>
+                    <div className="text-xs mt-2 opacity-75">معدل المشاهدات</div>
+                  </div>
+
+                  {/* Total Clicks */}
+                  <div className="bg-gradient-to-br from-pink-500 to-pink-600 text-white rounded-2xl p-6 shadow-lg">
+                    <div className="text-3xl mb-2">🔗</div>
+                    <div className="text-3xl font-bold mb-1">
+                      {linkClicksStats.reduce((sum, link) => sum + parseInt(link.total_clicks || 0), 0)}
+                    </div>
+                    <div className="text-sm opacity-90">نقرات الروابط</div>
+                    <div className="text-xs mt-2 opacity-75">جميع الروابط</div>
+                  </div>
+                </div>
+
+                {/* Device Breakdown */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span>📱</span>
+                    <span>توزيع الأجهزة</span>
+                  </h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-blue-50 rounded-xl">
+                      <div className="text-3xl mb-2">📱</div>
+                      <div className="text-2xl font-bold text-blue-600">{analyticsStats?.mobile_views || 0}</div>
+                      <div className="text-sm text-gray-600">موبايل</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {analyticsStats?.total_views ? Math.round((analyticsStats.mobile_views / analyticsStats.total_views) * 100) : 0}%
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 rounded-xl">
+                      <div className="text-3xl mb-2">💻</div>
+                      <div className="text-2xl font-bold text-purple-600">{analyticsStats?.desktop_views || 0}</div>
+                      <div className="text-sm text-gray-600">كمبيوتر</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {analyticsStats?.total_views ? Math.round((analyticsStats.desktop_views / analyticsStats.total_views) * 100) : 0}%
+                      </div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-xl">
+                      <div className="text-3xl mb-2">📱</div>
+                      <div className="text-2xl font-bold text-green-600">{analyticsStats?.tablet_views || 0}</div>
+                      <div className="text-sm text-gray-600">تابلت</div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {analyticsStats?.total_views ? Math.round((analyticsStats.tablet_views / analyticsStats.total_views) * 100) : 0}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Daily Views Chart */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span>📈</span>
+                    <span>المشاهدات اليومية ({
+                      analyticsChartDays === 1 ? 'اليوم' :
+                      analyticsChartDays === 7 ? 'آخر 7 أيام' :
+                      analyticsChartDays === 30 ? 'آخر 30 يوم' :
+                      analyticsChartDays === 90 ? 'آخر 90 يوم' :
+                      'آخر سنة'
+                    })</span>
+                  </h3>
+                  {dailyViews.length > 0 ? (
+                    <div className="space-y-3">
+                      {dailyViews.map((day, index) => {
+                        const maxViews = Math.max(...dailyViews.map(d => d.view_count))
+                        const percentage = maxViews > 0 ? (day.view_count / maxViews) * 100 : 0
+                        return (
+                          <div key={index} className="flex items-center gap-3">
+                            <div className="text-sm text-gray-600 w-24 text-right">
+                              {new Date(day.view_date).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="flex-1 h-10 bg-gray-100 rounded-lg overflow-hidden relative">
+                              <div
+                                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500 flex items-center justify-end px-3"
+                                style={{ width: `${percentage}%` }}
+                              >
+                                <span className="text-white font-bold text-sm">{day.view_count}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">لا توجد بيانات لعرضها</p>
+                  )}
+                </div>
+
+                {/* Link Clicks Stats */}
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span>🔗</span>
+                    <span>نقرات الروابط</span>
+                  </h3>
+                  {linkClicksStats.length > 0 ? (
+                    <div className="space-y-3">
+                      {linkClicksStats.map((link, index) => (
+                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-xl">
+                              {link.link_platform === 'instagram' ? '📷' :
+                               link.link_platform === 'tiktok' ? '🎵' :
+                               link.link_platform === 'snapchat' ? '👻' :
+                               link.link_platform === 'twitter' || link.link_platform === 'x' ? '🐦' :
+                               link.link_platform === 'youtube' ? '▶️' :
+                               link.link_platform === 'whatsapp' ? '💬' :
+                               link.link_platform === 'telegram' ? '✈️' :
+                               link.link_platform === 'linkedin' ? '💼' :
+                               link.link_platform === 'github' ? '🐙' :
+                               link.link_platform === 'website' ? '🌐' :
+                               link.link_platform === 'email' ? '📧' :
+                               link.link_platform === 'phone' ? '📞' : '🔗'}
+                            </div>
+                            <div>
+                              <div className="font-bold text-gray-800">{link.link_platform}</div>
+                              <div className="text-xs text-gray-500">
+                                {link.last_clicked_at ? `آخر نقرة: ${new Date(link.last_clicked_at).toLocaleDateString('ar-SA')}` : 'لا توجد نقرات'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-purple-600">{link.total_clicks}</div>
+                            <div className="text-xs text-gray-500">نقرة</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">لا توجد نقرات على الروابط بعد</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

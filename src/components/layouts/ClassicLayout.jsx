@@ -13,7 +13,8 @@ export default function ClassicLayout({
   filteredCodes,
   searchTerm,
   setSearchTerm,
-  getYouTubeEmbedUrl
+  getYouTubeEmbedUrl,
+  onLinkClick
 }) {
   return (
     <>
@@ -85,6 +86,7 @@ export default function ClassicLayout({
                   href={url}
                   target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
                   rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}
+                  onClick={() => onLinkClick && onLinkClick({ id, platform, url })}
                   className={`group relative w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 active:scale-95 ${
                     isDarkMode
                       ? 'bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 hover:border-white/30'

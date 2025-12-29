@@ -878,3 +878,138 @@ export const updateSocialLinksOrder = async (links) => {
   return { success: errors.length === 0, errors }
 }
 
+// ==================== ANALYTICS OPERATIONS ====================
+
+/**
+ * Track a page view (increments daily counter)
+ */
+export const trackPageView = async (pageId) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    // Detect device type
+    const userAgent = navigator.userAgent.toLowerCase()
+    let device = 'desktop'
+    if (/mobile|android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent)) {
+      device = /ipad|tablet/i.test(userAgent) ? 'tablet' : 'mobile'
+    }
+
+    const { data, error } = await supabase.rpc('track_page_view', {
+      p_page_id: currentPageId,
+      p_visitor_device: device
+    })
+
+    return { data, error }
+  } catch (error) {
+    console.error('Error tracking page view:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Track a link click (increments daily counter)
+ */
+export const trackLinkClick = async (pageId, linkId, linkPlatform) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    const { data, error } = await supabase.rpc('track_link_click', {
+      p_page_id: currentPageId,
+      p_link_id: linkId,
+      p_link_platform: linkPlatform
+    })
+
+    return { data, error }
+  } catch (error) {
+    console.error('Error tracking link click:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Get page views statistics
+ * Note: Divides counts by 2 and rounds up (to account for duplicate tracking)
+ */
+export const getPageViewsStats = async (pageId, days = 30) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    const { data, error } = await supabase.rpc('get_page_views_stats', {
+      p_page_id: currentPageId,
+      p_days: days
+    })
+
+    if (error) throw error
+
+    // Divide all view counts by 2 and round up
+    const result = data && data.length > 0 ? data[0] : null
+    if (result) {
+      return {
+        data: {
+          total_views: Math.ceil(parseInt(result.total_views || 0) / 2),
+          today_views: Math.ceil(parseInt(result.today_views || 0) / 2),
+          yesterday_views: Math.ceil(parseInt(result.yesterday_views || 0) / 2),
+          avg_daily_views: Math.ceil(parseFloat(result.avg_daily_views || 0) / 2),
+          mobile_views: Math.ceil(parseInt(result.mobile_views || 0) / 2),
+          tablet_views: Math.ceil(parseInt(result.tablet_views || 0) / 2),
+          desktop_views: Math.ceil(parseInt(result.desktop_views || 0) / 2)
+        },
+        error: null
+      }
+    }
+
+    return { data: null, error: null }
+  } catch (error) {
+    console.error('Error getting page views stats:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Get link clicks statistics
+ */
+export const getLinkClicksStats = async (pageId) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    const { data, error } = await supabase.rpc('get_link_clicks_stats', {
+      p_page_id: currentPageId
+    })
+
+    if (error) throw error
+
+    return { data: data || [], error: null }
+  } catch (error) {
+    console.error('Error getting link clicks stats:', error)
+    return { data: [], error }
+  }
+}
+
+/**
+ * Get daily views for chart
+ * Note: Divides counts by 2 and rounds up (to account for duplicate tracking)
+ */
+export const getDailyViews = async (pageId, days = 7) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    const { data, error } = await supabase.rpc('get_daily_views', {
+      p_page_id: currentPageId,
+      p_days: days
+    })
+
+    if (error) throw error
+
+    // Divide view counts by 2 and round up
+    const adjustedData = (data || []).map(item => ({
+      ...item,
+      view_count: Math.ceil(parseInt(item.view_count || 0) / 2)
+    }))
+
+    return { data: adjustedData, error: null }
+  } catch (error) {
+    console.error('Error getting daily views:', error)
+    return { data: [], error }
+  }
+}
+

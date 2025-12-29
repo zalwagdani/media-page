@@ -13,7 +13,8 @@ export default function ModernLayout({
   filteredCodes,
   searchTerm,
   setSearchTerm,
-  getYouTubeEmbedUrl
+  getYouTubeEmbedUrl,
+  onLinkClick
 }) {
   return (
     <>
@@ -74,6 +75,7 @@ export default function ModernLayout({
                     href={url}
                     target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
                     rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}
+                    onClick={() => onLinkClick && onLinkClick({ id, platform, url })}
                     className={`p-3 rounded-xl border transition-all hover:scale-110 ${
                       isDarkMode
                         ? `${currentTheme.border} bg-white/5 hover:bg-white/10`

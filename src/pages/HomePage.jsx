@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
-import { getProfile, getCodes, checkSubscription, getSocialLinks } from '../services/api'
+import { getProfile, getCodes, checkSubscription, getSocialLinks, trackPageView, trackLinkClick } from '../services/api'
 import { getPageId } from '../config/supabase'
 import AnonymousMessageButton from '../components/AnonymousMessageButton'
 import PageNotFoundPage from './PageNotFoundPage'
@@ -116,8 +116,21 @@ function HomePage() {
   // Pill container auto-hide state
   const [isPillVisible, setIsPillVisible] = useState(true)
 
+  // Track which pages have been tracked (prevents all duplicates)
+  const trackedPages = useRef(new Set())
+  // Track clicked links with timestamps
+  const clickedLinksTimestamps = useRef(new Map())
+  // Prevent double execution during mount
+  const isExecuting = useRef(false)
+
   useEffect(() => {
+    // Prevent concurrent executions
+    if (isExecuting.current) {
+      return
+    }
+
     const loadData = async () => {
+      isExecuting.current = true
       setLoading(true)
       setError(null)
       setImageLoadError(false)
@@ -226,6 +239,17 @@ function HomePage() {
           } else {
             setSocialLinks([])
           }
+
+          // Track page view (analytics) - Only once per page per session
+          if (!trackedPages.current.has(currentPageId)) {
+            try {
+              await trackPageView(currentPageId)
+              trackedPages.current.add(currentPageId)
+            } catch (trackError) {
+              // Silently fail - don't let tracking errors break the page
+              console.debug('Analytics tracking skipped:', trackError)
+            }
+          }
         } catch (apiError) {
           console.error('API error:', apiError)
           // Use default profile on API error
@@ -254,10 +278,16 @@ function HomePage() {
         setFilteredCodes([])
       } finally {
         setLoading(false)
+        isExecuting.current = false
       }
     }
 
     loadData()
+
+    // Cleanup function to reset flag on unmount
+    return () => {
+      isExecuting.current = false
+    }
   }, [routePageId]) // Reload when pageId changes
 
 
@@ -280,6 +310,28 @@ function HomePage() {
   useEffect(() => {
     localStorage.setItem('darkMode', isDarkMode.toString())
   }, [isDarkMode])
+
+  // Handle link click tracking - Prevent duplicates with 2 second debounce per link
+  const handleLinkClick = async (link) => {
+    const linkKey = link.id
+    const now = Date.now()
+    const lastClickTime = clickedLinksTimestamps.current.get(linkKey) || 0
+    const timeSinceLastClick = now - lastClickTime
+
+    // Ignore if clicked within last 2 seconds
+    if (timeSinceLastClick < 2000) {
+      return
+    }
+
+    try {
+      const currentPageId = routePageId || getPageId()
+      await trackLinkClick(currentPageId, link.id, link.platform)
+      clickedLinksTimestamps.current.set(linkKey, now)
+    } catch (error) {
+      // Silently fail - don't break user experience
+      console.debug('Link click tracking skipped:', error)
+    }
+  }
 
   // Premium auto-hide behavior for pill container
   useEffect(() => {
@@ -622,6 +674,7 @@ function HomePage() {
             searchTerm={searchQuery}
             setSearchTerm={setSearchQuery}
             getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+            onLinkClick={handleLinkClick}
           />
         ) : currentLayout.name === 'بسيط' ? (
           <MinimalLayout
@@ -637,6 +690,7 @@ function HomePage() {
             searchTerm={searchQuery}
             setSearchTerm={setSearchQuery}
             getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+            onLinkClick={handleLinkClick}
           />
         ) : (
           <ClassicLayout
@@ -652,6 +706,7 @@ function HomePage() {
             searchTerm={searchQuery}
             setSearchTerm={setSearchQuery}
             getYouTubeEmbedUrl={getYouTubeEmbedUrl}
+            onLinkClick={handleLinkClick}
           />
         )}
 
