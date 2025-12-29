@@ -1,5 +1,6 @@
 // Minimal Layout - Clean and Professional design
 import React from 'react'
+import { platformLabels } from '../../utils/socialPlatforms'
 
 export default function MinimalLayout({
   profile,
@@ -70,30 +71,35 @@ export default function MinimalLayout({
       {activeSocialMedia.length > 0 && (
         <div className="mb-10">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {activeSocialMedia.map(([platform, url]) => (
-              <a
-                key={platform}
-                href={url}
-                target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
-                rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}
-                className={`group flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
-                  isDarkMode
-                    ? `${currentTheme.border} bg-white/5 hover:bg-white/10 hover:${currentTheme.border.replace('/30', '')}`
-                    : 'border-gray-200 bg-white hover:border-purple-400 hover:shadow-purple-100'
-                }`}
-              >
-                <div className={`transition-transform duration-300 group-hover:scale-110 ${
-                  isDarkMode ? currentTheme.text : 'text-gray-700'
-                }`}>
-                  {renderSocialIcon(platform)}
-                </div>
-                <span className={`text-sm font-semibold capitalize ${
-                  isDarkMode ? currentTheme.text : 'text-gray-700'
-                }`}>
-                  {platform === 'twitter' ? 'X' : platform}
-                </span>
-              </a>
-            ))}
+            {activeSocialMedia.map(([platform, url, label, id]) => {
+              // Use custom label if provided, otherwise use default Arabic label
+              const displayLabel = label || platformLabels[platform] || platform
+
+              return (
+                <a
+                  key={id || platform}
+                  href={url}
+                  target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
+                  rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}
+                  className={`group flex items-center gap-3 p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                    isDarkMode
+                      ? `${currentTheme.border} bg-white/5 hover:bg-white/10 hover:${currentTheme.border.replace('/30', '')}`
+                      : 'border-gray-200 bg-white hover:border-purple-400 hover:shadow-purple-100'
+                  }`}
+                >
+                  <div className={`transition-transform duration-300 group-hover:scale-110 ${
+                    isDarkMode ? currentTheme.text : 'text-gray-700'
+                  }`}>
+                    {renderSocialIcon(platform)}
+                  </div>
+                  <span className={`text-sm font-semibold ${
+                    isDarkMode ? currentTheme.text : 'text-gray-700'
+                  }`}>
+                    {displayLabel}
+                  </span>
+                </a>
+              )
+            })}
           </div>
         </div>
       )}

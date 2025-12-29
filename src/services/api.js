@@ -373,6 +373,41 @@ export const isAdminAuthenticated = () => {
 }
 
 /**
+ * Check if the currently authenticated user owns/manages the specified page
+ * CRITICAL SECURITY: Must be called before allowing access to admin page
+ */
+export const checkPageOwnership = async (pageId) => {
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user) {
+      console.error('No authenticated user found')
+      return { authorized: false, error: 'Not authenticated' }
+    }
+
+    // Check if user is admin of this specific page
+    const { data: adminData, error: adminError } = await supabase
+      .from('admins')
+      .select('page_id')
+      .eq('user_id', user.id)
+      .eq('page_id', pageId)
+      .single()
+
+    if (adminError || !adminData) {
+      console.error('User is not admin of this page:', { userId: user.id, pageId })
+      return { authorized: false, error: 'Unauthorized: You do not own this page' }
+    }
+
+    // User is authorized
+    return { authorized: true, userId: user.id, pageId: adminData.page_id }
+  } catch (err) {
+    console.error('Error checking page ownership:', err)
+    return { authorized: false, error: err.message }
+  }
+}
+
+/**
  * Logout admin
  */
 export const logoutAdmin = async () => {
@@ -704,3 +739,142 @@ export const createSubscription = async (pageId, planType, durationDays, isTrial
     return { data, error }
   }
 }
+
+// ==================== SOCIAL LINKS OPERATIONS ====================
+
+/**
+ * Get all social links for a page
+ */
+export const getSocialLinks = async (pageId = null) => {
+  try {
+    const currentPageId = pageId || getPageId()
+
+    const { data, error } = await supabase
+      .from('social_links')
+      .select('*')
+      .eq('page_id', currentPageId)
+      .order('display_order', { ascending: true })
+
+    // If table doesn't exist, return empty array
+    if (error && error.message?.includes('relation "social_links" does not exist')) {
+      console.warn('Social links table not created yet')
+      return { data: [], error: null }
+    }
+
+    if (!data) return { data: [], error }
+
+    return { data, error: null }
+  } catch (err) {
+    console.warn('Error fetching social links:', err)
+    return { data: [], error: null }
+  }
+}
+
+/**
+ * Add a new social link
+ */
+export const addSocialLink = async (pageId, platform, url, label = null) => {
+  const currentPageId = pageId || getPageId()
+
+  // Validate and sanitize inputs
+  if (!url || url.trim().length === 0) {
+    return { data: null, error: { message: 'URL is required' } }
+  }
+
+  if (url.length > 500) {
+    return { data: null, error: { message: 'URL is too long (max 500 characters)' } }
+  }
+
+  // Sanitize label: max 30 characters, trim whitespace
+  const sanitizedLabel = label ? label.trim().substring(0, 30) : null
+
+  // Get current max order
+  const { data: existingLinks } = await supabase
+    .from('social_links')
+    .select('display_order')
+    .eq('page_id', currentPageId)
+    .order('display_order', { ascending: false })
+    .limit(1)
+
+  const nextOrder = existingLinks && existingLinks.length > 0
+    ? existingLinks[0].display_order + 1
+    : 0
+
+  const { data, error } = await supabase
+    .from('social_links')
+    .insert({
+      page_id: currentPageId,
+      platform,
+      url: url.trim(),
+      label: sanitizedLabel,
+      display_order: nextOrder
+    })
+    .select()
+    .single()
+
+  return { data, error }
+}
+
+/**
+ * Update a social link
+ */
+export const updateSocialLink = async (linkId, updates) => {
+  // Sanitize updates
+  const sanitizedUpdates = { ...updates }
+
+  // Validate URL if provided
+  if (updates.url !== undefined) {
+    if (!updates.url || updates.url.trim().length === 0) {
+      return { data: null, error: { message: 'URL is required' } }
+    }
+    if (updates.url.length > 500) {
+      return { data: null, error: { message: 'URL is too long (max 500 characters)' } }
+    }
+    sanitizedUpdates.url = updates.url.trim()
+  }
+
+  // Sanitize label if provided: max 30 characters
+  if (updates.label !== undefined) {
+    sanitizedUpdates.label = updates.label ? updates.label.trim().substring(0, 30) : null
+  }
+
+  const { data, error } = await supabase
+    .from('social_links')
+    .update(sanitizedUpdates)
+    .eq('id', linkId)
+    .select()
+    .single()
+
+  return { data, error }
+}
+
+/**
+ * Delete a social link
+ */
+export const deleteSocialLink = async (linkId) => {
+  const { error } = await supabase
+    .from('social_links')
+    .delete()
+    .eq('id', linkId)
+
+  return { success: !error, error }
+}
+
+/**
+ * Update display order for multiple links (for drag & drop)
+ */
+export const updateSocialLinksOrder = async (links) => {
+  // Update each link's display_order
+  const updates = links.map((link, index) =>
+    supabase
+      .from('social_links')
+      .update({ display_order: index })
+      .eq('id', link.id)
+  )
+
+  const results = await Promise.all(updates)
+  const errors = results.filter(r => r.error)
+
+  return { success: errors.length === 0, errors }
+}
+

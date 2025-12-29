@@ -68,9 +68,9 @@ export default function ModernLayout({
             {/* Social Media - Horizontal */}
             {activeSocialMedia.length > 0 && (
               <div className="flex flex-wrap gap-2 justify-center md:justify-end">
-                {activeSocialMedia.map(([platform, url]) => (
+                {activeSocialMedia.map(([platform, url, label, id]) => (
                   <a
-                    key={platform}
+                    key={id || platform}
                     href={url}
                     target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
                     rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}

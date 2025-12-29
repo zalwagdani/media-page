@@ -79,9 +79,9 @@ export default function ClassicLayout({
           {/* Social Media Icons - Professional Circular Icons */}
           {activeSocialMedia.length > 0 && (
             <div className="flex flex-wrap gap-4 justify-center w-full max-w-2xl">
-              {activeSocialMedia.map(([platform, url]) => (
+              {activeSocialMedia.map(([platform, url, label, id]) => (
                 <a
-                  key={platform}
+                  key={id || platform}
                   href={url}
                   target={!url.startsWith('mailto:') && !url.startsWith('tel:') ? '_blank' : undefined}
                   rel={!url.startsWith('mailto:') && !url.startsWith('tel:') ? 'noopener noreferrer' : undefined}

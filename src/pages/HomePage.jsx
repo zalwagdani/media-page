@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { getProfile, getCodes, checkSubscription } from '../services/api'
+import { getProfile, getCodes, checkSubscription, getSocialLinks } from '../services/api'
 import { getPageId } from '../config/supabase'
 import AnonymousMessageButton from '../components/AnonymousMessageButton'
 import PageNotFoundPage from './PageNotFoundPage'
@@ -101,6 +101,7 @@ function HomePage() {
   const { pageId: routePageId } = useParams()
   const [profile, setProfile] = useState(null)
   const [codes, setCodes] = useState([])
+  const [socialLinks, setSocialLinks] = useState([]) // Dynamic social links from database
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredCodes, setFilteredCodes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -177,13 +178,18 @@ function HomePage() {
           // Subscription is valid, load profile and codes
           setSubscriptionValid(true)
 
-          const [profileResult, codesResult] = await Promise.all([
+          const [profileResult, codesResult, socialLinksResult] = await Promise.all([
             getProfile(currentPageId),
-            getCodes(currentPageId)
+            getCodes(currentPageId),
+            getSocialLinks(currentPageId).catch(err => {
+              console.warn('Social links table not found, using empty array:', err)
+              return { data: [], error: null }
+            })
           ])
-          
+
           console.log('Profile result:', profileResult)
           console.log('Codes result:', codesResult)
+          console.log('Social links result:', socialLinksResult)
           
           if (profileResult.error) {
             console.error('Profile error:', profileResult.error)
@@ -209,6 +215,16 @@ function HomePage() {
           } else {
             setCodes([])
             setFilteredCodes([])
+          }
+
+          // Handle social links
+          if (socialLinksResult.error) {
+            console.error('Social links error:', socialLinksResult.error)
+            setSocialLinks([])
+          } else if (socialLinksResult.data) {
+            setSocialLinks(socialLinksResult.data)
+          } else {
+            setSocialLinks([])
           }
         } catch (apiError) {
           console.error('API error:', apiError)
@@ -243,6 +259,7 @@ function HomePage() {
 
     loadData()
   }, [routePageId]) // Reload when pageId changes
+
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -432,6 +449,7 @@ function HomePage() {
     return null
   }
 
+
   // Process URLs with special handling for email, phone, and whatsapp
   const processUrl = (platform, value) => {
     const trimmedValue = value.trim()
@@ -480,9 +498,11 @@ function HomePage() {
     return normalizeUrl(trimmedValue)
   }
 
-  const activeSocialMedia = Object.entries(profile.socialMedia || {})
-    .filter(([_, url]) => url && url.trim() !== '')
-    .map(([platform, url]) => [platform, processUrl(platform, url)])
+  // Use dynamic social links from database (new system)
+  // Format: [[platform, url, label, id], ...]
+  const activeSocialMedia = socialLinks
+    .filter(link => link.url && link.url.trim() !== '')
+    .map(link => [link.platform, processUrl(link.platform, link.url), link.label, link.id])
 
   // Get theme configuration
   const currentTheme = getTheme(profile.theme || 'gradient-purple')

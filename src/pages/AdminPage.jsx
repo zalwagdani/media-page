@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails } from '../services/api'
-import { logoutAdmin, isAdminAuthenticated } from '../services/api'
+import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails, getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink, updateSocialLinksOrder } from '../services/api'
+import { logoutAdmin, isAdminAuthenticated, checkPageOwnership } from '../services/api'
 import { getPageId } from '../config/supabase'
 import { themes } from '../config/themes'
 import { layouts } from '../config/layouts'
+import { platformLabels, platformPlaceholders, platformOptions, getDisplayLabel } from '../utils/socialPlatforms'
 
 function AdminPage() {
   const { pageId: routePageId } = useParams()
@@ -41,6 +42,12 @@ function AdminPage() {
   const [showExpiredPopup, setShowExpiredPopup] = useState(false)
   const [showSubscriptionCard, setShowSubscriptionCard] = useState(true)
 
+  // Social Links State
+  const [socialLinks, setSocialLinks] = useState([])
+  const [editingLink, setEditingLink] = useState(null)
+  const [linkForm, setLinkForm] = useState({ platform: 'instagram', url: '', label: '' })
+  const [draggedLink, setDraggedLink] = useState(null)
+
   useEffect(() => {
     if (!isAdminAuthenticated()) {
       navigate('/login', { replace: true })
@@ -50,12 +57,25 @@ function AdminPage() {
     const loadData = async () => {
       try {
         setLoading(true)
-        const [profileResult, codesResult, messagesResult, enabledResult, subscriptionResult] = await Promise.all([
+
+        // 🔒 SECURITY CHECK: Verify user owns this page
+        const ownershipCheck = await checkPageOwnership(currentPageId)
+        if (!ownershipCheck.authorized) {
+          alert('⛔ غير مصرح لك بالوصول لهذه الصفحة!\n\nأنت تحاول الوصول لصفحة لا تملكها.')
+          navigate('/login', { replace: true })
+          return
+        }
+
+        const [profileResult, codesResult, messagesResult, enabledResult, subscriptionResult, socialLinksResult] = await Promise.all([
           getProfile(currentPageId),
           getCodes(currentPageId),
           getAnonymousMessages(currentPageId),
           isAnonymousMessagesEnabled(currentPageId),
-          getSubscriptionDetails(currentPageId)
+          getSubscriptionDetails(currentPageId),
+          getSocialLinks(currentPageId).catch(err => {
+            console.warn('Social links table not found, using empty array:', err)
+            return { data: [], error: null }
+          })
         ])
 
         if (profileResult.data) {
@@ -78,6 +98,7 @@ function AdminPage() {
           setSubscription(subscriptionResult.data)
           if (subscriptionResult.data.is_expired === true) setShowExpiredPopup(true)
         }
+        if (socialLinksResult.data) setSocialLinks(socialLinksResult.data)
         setSubscriptionLoading(false)
       } catch (error) {
         console.error('Error loading data:', error)
@@ -257,6 +278,116 @@ function AdminPage() {
     } catch (error) {
       console.error('Error toggling messages:', error)
       alert('حدث خطأ أثناء تغيير الإعدادات')
+    }
+  }
+
+  // Social Links Handlers
+  const handleAddLink = async (e) => {
+    e.preventDefault()
+
+    // Check max links limit (10)
+    if (socialLinks.length >= 10) {
+      alert('⚠️ الحد الأقصى للروابط هو 10')
+      return
+    }
+
+    try {
+      const { data, error } = await addSocialLink(
+        currentPageId,
+        linkForm.platform,
+        linkForm.url,
+        linkForm.label || null
+      )
+
+      if (error) throw error
+
+      setSocialLinks([...socialLinks, data])
+      setLinkForm({ platform: 'instagram', url: '', label: '' })
+      alert('✅ تم إضافة الرابط بنجاح!')
+    } catch (error) {
+      console.error('Error adding link:', error)
+      alert('❌ حدث خطأ أثناء إضافة الرابط')
+    }
+  }
+
+  const handleEditLink = (link) => {
+    setEditingLink(link)
+    setLinkForm({
+      platform: link.platform,
+      url: link.url,
+      label: link.label || ''
+    })
+  }
+
+  const handleUpdateLink = async (e) => {
+    e.preventDefault()
+
+    try {
+      const { data, error } = await updateSocialLink(editingLink.id, {
+        platform: linkForm.platform,
+        url: linkForm.url,
+        label: linkForm.label || null
+      })
+
+      if (error) throw error
+
+      setSocialLinks(socialLinks.map(link =>
+        link.id === editingLink.id ? data : link
+      ))
+      setEditingLink(null)
+      setLinkForm({ platform: 'instagram', url: '', label: '' })
+      alert('✅ تم تحديث الرابط بنجاح!')
+    } catch (error) {
+      console.error('Error updating link:', error)
+      alert('❌ حدث خطأ أثناء تحديث الرابط')
+    }
+  }
+
+  const handleDeleteLink = async (linkId) => {
+    if (!confirm('هل أنت متأكد من حذف هذا الرابط؟')) return
+
+    try {
+      const { error } = await deleteSocialLink(linkId)
+      if (error) throw error
+
+      setSocialLinks(socialLinks.filter(link => link.id !== linkId))
+      alert('✅ تم حذف الرابط بنجاح!')
+    } catch (error) {
+      console.error('Error deleting link:', error)
+      alert('❌ حدث خطأ أثناء حذف الرابط')
+    }
+  }
+
+  const handleDragStart = (e, link) => {
+    setDraggedLink(link)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+  }
+
+  const handleDrop = async (e, targetLink) => {
+    e.preventDefault()
+
+    if (!draggedLink || draggedLink.id === targetLink.id) return
+
+    const draggedIndex = socialLinks.findIndex(l => l.id === draggedLink.id)
+    const targetIndex = socialLinks.findIndex(l => l.id === targetLink.id)
+
+    const newLinks = [...socialLinks]
+    newLinks.splice(draggedIndex, 1)
+    newLinks.splice(targetIndex, 0, draggedLink)
+
+    setSocialLinks(newLinks)
+    setDraggedLink(null)
+
+    // Update order in database
+    try {
+      await updateSocialLinksOrder(newLinks)
+    } catch (error) {
+      console.error('Error updating order:', error)
     }
   }
 
@@ -577,45 +708,181 @@ function AdminPage() {
                 </div>
               </div>
 
-              {/* Social Media */}
+              {/* Social Media - Dynamic Links */}
               <div>
                 <label className="block text-lg font-bold text-gray-800 mb-4">📱 وسائل التواصل</label>
-                <p className="text-sm text-gray-600 mb-4">💡 أضف روابط حساباتك على مواقع التواصل الاجتماعي لتظهر كأزرار في صفحتك</p>
-                <div className="grid grid-cols-2 gap-4">
-                  {['twitter', 'instagram', 'linkedin', 'github', 'tiktok', 'snapchat', 'youtube', 'whatsapp', 'telegram', 'website', 'email', 'phone'].map((platform) => {
-                    const labels = {
-                      twitter: 'X (تويتر سابقاً)', instagram: 'إنستغرام', linkedin: 'لينكد إن', github: 'جيت هاب',
-                      tiktok: 'تيك توك', snapchat: 'سناب شات', youtube: 'يوتيوب', whatsapp: 'واتساب',
-                      telegram: 'تلقرام', website: 'الموقع', email: 'البريد', phone: 'الهاتف'
-                    }
-                    const placeholders = {
-                      twitter: 'https://x.com/username',
-                      instagram: 'https://instagram.com/username',
-                      linkedin: 'https://linkedin.com/in/username',
-                      github: 'https://github.com/username',
-                      tiktok: 'https://tiktok.com/@username',
-                      snapchat: 'https://snapchat.com/add/username',
-                      youtube: 'https://youtube.com/@username',
-                      whatsapp: '966501234567',
-                      telegram: 'username أو https://t.me/username',
-                      website: 'https://example.com',
-                      email: 'your@email.com',
-                      phone: '966501234567'
-                    }
-                    return (
-                      <div key={platform}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">{labels[platform]}</label>
+                <p className="text-sm text-gray-600 mb-4">💡 أضف روابط حساباتك - يمكنك إضافة أكثر من رابط لنفس التطبيق مع إمكانية تخصيص العنوان</p>
+
+                {/* Add/Edit Form */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 mb-6">
+                  <form onSubmit={editingLink ? handleUpdateLink : handleAddLink} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {/* Platform Selector */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">التطبيق *</label>
+                        <div className="relative">
+                          <select
+                            value={linkForm.platform}
+                            onChange={(e) => setLinkForm({ ...linkForm, platform: e.target.value })}
+                            className="w-full h-[50px] px-4 pr-10 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none bg-white appearance-none cursor-pointer transition-all hover:border-purple-400"
+                            required
+                          >
+                            {platformOptions.map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          {/* Custom Arrow Icon */}
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* URL Input */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">الرابط *</label>
                         <input
-                          type={platform === 'email' ? 'email' : (platform === 'phone' || platform === 'whatsapp') ? 'tel' : 'url'}
-                          value={profile.socialMedia[platform] || ''}
-                          onChange={(e) => handleProfileChange(`social.${platform}`, e.target.value)}
-                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none text-sm"
-                          placeholder={placeholders[platform]}
+                          type="text"
+                          value={linkForm.url}
+                          onChange={(e) => setLinkForm({ ...linkForm, url: e.target.value })}
+                          className="w-full h-[50px] px-4 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all hover:border-purple-400"
+                          placeholder={platformPlaceholders[linkForm.platform]}
                           dir="ltr"
+                          maxLength={500}
+                          required
                         />
                       </div>
-                    )
-                  })}
+
+                      {/* Label Input (Optional) */}
+                      <div>
+                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                          العنوان المخصص (اختياري)
+                        </label>
+                        <input
+                          type="text"
+                          value={linkForm.label}
+                          onChange={(e) => setLinkForm({ ...linkForm, label: e.target.value })}
+                          className="w-full h-[50px] px-4 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 focus:outline-none transition-all hover:border-purple-400"
+                          placeholder={platformLabels[linkForm.platform]}
+                          maxLength={30}
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          يظهر في التصميم البسيط ({linkForm.label.length}/30 حرف)
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="submit"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all font-bold"
+                      >
+                        {editingLink ? '✅ تحديث الرابط' : '➕ إضافة رابط'}
+                      </button>
+                      {editingLink && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingLink(null)
+                            setLinkForm({ platform: 'instagram', url: '', label: '' })
+                          }}
+                          className="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 hover:scale-[1.02] active:scale-[0.98] transition-all font-bold"
+                        >
+                          ❌ إلغاء
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
+
+                {/* Links List */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-gray-800">
+                      الروابط المضافة ({socialLinks.length}/10)
+                    </h3>
+                    {socialLinks.length === 0 && (
+                      <span className="text-sm text-gray-500">لم يتم إضافة روابط بعد</span>
+                    )}
+                  </div>
+
+                  {socialLinks.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+                      <div className="text-4xl mb-2">🔗</div>
+                      <p className="text-gray-500">ابدأ بإضافة روابط التواصل الاجتماعي</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {socialLinks.map((link) => (
+                        <div
+                          key={link.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, link)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, link)}
+                          className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-md transition-all cursor-move group"
+                        >
+                          {/* Drag Handle */}
+                          <div className="hidden sm:block text-gray-400 group-hover:text-purple-500 transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                            </svg>
+                          </div>
+
+                          {/* Link Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-2 mb-1">
+                              <span className="font-bold text-gray-800 break-words">
+                                {getDisplayLabel(link)}
+                              </span>
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full whitespace-nowrap">
+                                {platformLabels[link.platform]}
+                              </span>
+                              {link.label && (
+                                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full whitespace-nowrap">
+                                  مخصص
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 truncate" dir="ltr">
+                              {link.url}
+                            </p>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex gap-2 sm:flex-row">
+                            <button
+                              onClick={() => handleEditLink(link)}
+                              className="flex-1 sm:flex-none px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 active:scale-95 transition-all"
+                              title="تعديل"
+                            >
+                              ✏️ تعديل
+                            </button>
+                            <button
+                              onClick={() => handleDeleteLink(link.id)}
+                              className="flex-1 sm:flex-none px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 active:scale-95 transition-all"
+                              title="حذف"
+                            >
+                              🗑️ حذف
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Drag & Drop Hint */}
+                  {socialLinks.length > 1 && (
+                    <p className="text-xs text-gray-500 text-center mt-3">
+                      <span className="hidden sm:inline">💡 اسحب الروابط لإعادة ترتيبها</span>
+                      <span className="sm:hidden">💡 استخدم الكمبيوتر لإعادة ترتيب الروابط بالسحب</span>
+                    </p>
+                  )}
                 </div>
               </div>
 
