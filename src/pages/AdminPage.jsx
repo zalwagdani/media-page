@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { getProfile, saveProfile, getCodes, addCode, deleteCode, updateCode, uploadProfilePicture, deleteProfilePicture, getAnonymousMessages, deleteAnonymousMessage, toggleAnonymousMessages, isAnonymousMessagesEnabled, getSubscriptionDetails, getSocialLinks, addSocialLink, updateSocialLink, deleteSocialLink, updateSocialLinksOrder } from '../services/api'
 import { logoutAdmin, isAdminAuthenticated, checkPageOwnership } from '../services/api'
 import { getPageId } from '../config/supabase'
-import { themes } from '../config/themes'
+import { themes, getAvailableThemes } from '../config/themes'
 import { layouts } from '../config/layouts'
 import { platformLabels, platformPlaceholders, platformOptions, getDisplayLabel } from '../utils/socialPlatforms'
 
@@ -285,9 +285,16 @@ function AdminPage() {
   const handleAddLink = async (e) => {
     e.preventDefault()
 
-    // Check max links limit (10)
-    if (socialLinks.length >= 10) {
-      alert('⚠️ الحد الأقصى للروابط هو 10')
+    // Check max links limit based on plan tier
+    const maxLinks = subscription && subscription.plan_tier === 'premium' ? 20 : 5
+    const tierName = subscription && subscription.plan_tier === 'premium' ? 'Premium' : 'Standard'
+
+    if (socialLinks.length >= maxLinks) {
+      if (subscription && subscription.plan_tier === 'standard') {
+        alert(`⚠️ وصلت للحد الأقصى في باقة ${tierName} (${maxLinks} روابط)\n\n⭐ قم بالترقية للباقة المميزة (Premium) للحصول على حتى 20 رابط!`)
+      } else {
+        alert(`⚠️ الحد الأقصى للروابط هو ${maxLinks}`)
+      }
       return
     }
 
@@ -546,7 +553,15 @@ function AdminPage() {
                 </svg>
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm flex-1 min-w-0">
-                <span className="font-semibold text-gray-700 whitespace-nowrap">الاشتراك:</span>
+                <span className="font-semibold text-gray-700 whitespace-nowrap">الباقة:</span>
+                <span className={`px-2 py-0.5 rounded-full font-medium ${
+                  subscription.plan_tier === 'premium'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                    : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {subscription.plan_tier === 'premium' ? '⭐ بريميم' : 'ستاندرد'}
+                </span>
+                <span className="text-gray-400 hidden sm:inline">•</span>
                 <span className="text-gray-600">{subscription.plan_type === 'monthly' ? 'شهري' : 'سنوي'}</span>
                 <span className="text-gray-400 hidden sm:inline">•</span>
                 <span className={`font-medium ${subscription.is_expired ? 'text-red-600' : subscription.days_remaining <= 7 ? 'text-yellow-700' : 'text-green-600'}`}>
@@ -747,10 +762,17 @@ function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🌈 ثيم الألوان</label>
+                <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">
+                  🌈 ثيم الألوان
+                  {subscription && subscription.plan_tier === 'standard' && (
+                    <span className="mr-2 text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">⭐ المزيد في Premium</span>
+                  )}
+                </label>
                 <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">💡 اختر مجموعة الألوان التي تناسب ذوقك - سيتم تطبيقها على كامل الصفحة</p>
+
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
-                  {Object.entries(themes).map(([key, theme]) => (
+                  {/* Available Themes for Current Plan */}
+                  {Object.entries(getAvailableThemes(subscription?.plan_tier || 'standard')).map(([key, theme]) => (
                     <button
                       key={key}
                       onClick={() => handleProfileChange('theme', key)}
@@ -760,6 +782,23 @@ function AdminPage() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
+                      <div className={`w-full h-12 rounded-lg bg-gradient-to-br ${theme.gradient} mb-2 flex items-center justify-center text-2xl`}>
+                        {theme.icon}
+                      </div>
+                      <p className="text-xs font-medium text-center">{theme.name}</p>
+                    </button>
+                  ))}
+
+                  {/* Locked Premium Themes for Standard Users */}
+                  {subscription && subscription.plan_tier === 'standard' && Object.entries(themes).filter(([_, theme]) => theme.premiumOnly).map(([key, theme]) => (
+                    <button
+                      key={key}
+                      onClick={() => alert('⭐ هذا الثيم حصري للباقة المميزة (Premium)\n\nقم بالترقية للوصول لجميع الثيمات الحصرية!')}
+                      className="p-3 rounded-xl border-2 border-gray-200 opacity-50 relative cursor-not-allowed"
+                    >
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl backdrop-blur-sm">
+                        <span className="text-2xl">🔒</span>
+                      </div>
                       <div className={`w-full h-12 rounded-lg bg-gradient-to-br ${theme.gradient} mb-2 flex items-center justify-center text-2xl`}>
                         {theme.icon}
                       </div>
@@ -865,7 +904,10 @@ function AdminPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-bold text-gray-800">
-                      الروابط المضافة ({socialLinks.length}/10)
+                      الروابط المضافة ({socialLinks.length}/{subscription && subscription.plan_tier === 'premium' ? '20' : '5'})
+                      {subscription && subscription.plan_tier === 'standard' && (
+                        <span className="mr-2 text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">⭐ Premium: 20 رابط</span>
+                      )}
                     </h3>
                     {socialLinks.length === 0 && (
                       <span className="text-sm text-gray-500">لم يتم إضافة روابط بعد</span>
@@ -1089,20 +1131,67 @@ function AdminPage() {
 
         {activeTab === 'messages' && (
           <div className="space-y-4 sm:space-y-6">
+            {/* Premium Feature Notice for Standard Users */}
+            {subscription && subscription.plan_tier === 'standard' && (
+              <div className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-300 rounded-xl p-4 sm:p-6">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl">⭐</div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-800 mb-2">ميزة حصرية للباقة المميزة</h3>
+                    <p className="text-sm text-gray-700 mb-3">
+                      الرسائل المجهولة متاحة فقط لمشتركي الباقة المميزة (Premium). قم بالترقية للاستمتاع بهذه الميزة والمزيد!
+                    </p>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <p>✨ مميزات الباقة المميزة:</p>
+                      <ul className="mr-4 space-y-0.5">
+                        <li>• رسائل مجهولة من الزوار</li>
+                        <li>• روابط غير محدودة</li>
+                        <li>• جميع الثيمات والتصاميم</li>
+                        <li>• إحصائيات متقدمة (قريباً)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Settings */}
             <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6">⚙️ إعدادات الرسائل المجهولة</h2>
-              <div className="flex items-center justify-between p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                ⚙️ إعدادات الرسائل المجهولة
+                {subscription && subscription.plan_tier === 'premium' && (
+                  <span className="mr-2 text-sm px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full">⭐ Premium</span>
+                )}
+              </h2>
+              <div className={`flex items-center justify-between p-6 rounded-xl border-2 ${
+                subscription && subscription.plan_tier === 'standard'
+                  ? 'bg-gray-50 border-gray-300 opacity-60'
+                  : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+              }`}>
                 <div>
                   <p className="font-bold text-gray-800 mb-1">تفعيل الرسائل المجهولة</p>
-                  <p className="text-sm text-gray-600">عند التفعيل، سيظهر زر عائم للزوار لإرسال رسائل</p>
+                  <p className="text-sm text-gray-600">
+                    {subscription && subscription.plan_tier === 'standard'
+                      ? 'يتطلب الباقة المميزة (Premium)'
+                      : 'عند التفعيل، سيظهر زر عائم للزوار لإرسال رسائل'
+                    }
+                  </p>
                 </div>
                 <button
-                  onClick={() => handleToggleMessages(!messagesEnabled)}
+                  onClick={() => {
+                    if (subscription && subscription.plan_tier === 'standard') {
+                      alert('⭐ هذه الميزة متاحة فقط للباقة المميزة (Premium)\n\nتواصل معنا للترقية والاستمتاع بجميع المميزات!')
+                      return
+                    }
+                    handleToggleMessages(!messagesEnabled)
+                  }}
                   className={`relative inline-flex h-10 w-20 items-center rounded-full transition-colors ${
-                    messagesEnabled ? 'bg-green-500' : 'bg-gray-300'
+                    subscription && subscription.plan_tier === 'standard'
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : messagesEnabled ? 'bg-green-500' : 'bg-gray-300'
                   }`}
                   dir="ltr"
+                  disabled={subscription && subscription.plan_tier === 'standard'}
                 >
                   <span className={`inline-block h-8 w-8 transform rounded-full bg-white shadow-lg transition-transform ${
                     messagesEnabled ? 'translate-x-11' : 'translate-x-1'

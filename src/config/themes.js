@@ -1,5 +1,6 @@
 // Theme configurations for the media page
 export const themes = {
+  // ===== STANDARD THEMES (Available for all users) =====
   'gradient-purple': {
     name: 'البنفسجي الكلاسيكي',
     gradient: 'from-purple-900 via-purple-800 to-indigo-900',
@@ -9,29 +10,8 @@ export const themes = {
     border: 'border-purple-500/30',
     glow: 'shadow-purple-500/20',
     cardBg: 'from-purple-800/90 via-purple-800/80 to-purple-900/90',
-    icon: '💜'
-  },
-  'gradient-royal': {
-    name: 'الملكي الفاخر',
-    gradient: 'from-indigo-950 via-violet-900 to-purple-950',
-    accent: 'bg-violet-600 hover:bg-violet-700',
-    text: 'text-violet-100',
-    textGradient: 'from-violet-300 to-purple-300',
-    border: 'border-violet-500/30',
-    glow: 'shadow-violet-500/20',
-    cardBg: 'from-violet-800/90 via-violet-800/80 to-violet-900/90',
-    icon: '👑'
-  },
-  'gradient-sunset': {
-    name: 'غروب الشمس',
-    gradient: 'from-orange-900 via-red-800 to-pink-900',
-    accent: 'bg-orange-600 hover:bg-orange-700',
-    text: 'text-orange-100',
-    textGradient: 'from-orange-300 to-pink-300',
-    border: 'border-orange-500/30',
-    glow: 'shadow-orange-500/20',
-    cardBg: 'from-orange-800/90 via-red-800/80 to-pink-900/90',
-    icon: '🌅'
+    icon: '💜',
+    premiumOnly: false
   },
   'gradient-ocean': {
     name: 'المحيط العميق',
@@ -42,18 +22,8 @@ export const themes = {
     border: 'border-teal-500/30',
     glow: 'shadow-teal-500/20',
     cardBg: 'from-teal-800/90 via-cyan-800/80 to-blue-900/90',
-    icon: '🌊'
-  },
-  'gradient-emerald': {
-    name: 'الزمرد الثمين',
-    gradient: 'from-emerald-950 via-green-900 to-teal-950',
-    accent: 'bg-emerald-600 hover:bg-emerald-700',
-    text: 'text-emerald-100',
-    textGradient: 'from-emerald-300 to-teal-300',
-    border: 'border-emerald-500/30',
-    glow: 'shadow-emerald-500/20',
-    cardBg: 'from-emerald-800/90 via-green-800/80 to-teal-900/90',
-    icon: '💎'
+    icon: '🌊',
+    premiumOnly: false
   },
   'gradient-rose': {
     name: 'الوردي الأنيق',
@@ -64,7 +34,8 @@ export const themes = {
     border: 'border-pink-500/30',
     glow: 'shadow-pink-500/20',
     cardBg: 'from-pink-800/90 via-rose-800/80 to-purple-900/90',
-    icon: '🌹'
+    icon: '🌹',
+    premiumOnly: false
   },
   'gradient-midnight': {
     name: 'منتصف الليل',
@@ -75,7 +46,46 @@ export const themes = {
     border: 'border-slate-500/30',
     glow: 'shadow-slate-500/20',
     cardBg: 'from-slate-800/90 via-slate-800/80 to-indigo-900/90',
-    icon: '🌙'
+    icon: '🌙',
+    premiumOnly: false
+  },
+
+  // ===== PREMIUM THEMES (Exclusive for Premium users) =====
+  'gradient-royal': {
+    name: 'الملكي الفاخر',
+    gradient: 'from-indigo-950 via-violet-900 to-purple-950',
+    accent: 'bg-violet-600 hover:bg-violet-700',
+    text: 'text-violet-100',
+    textGradient: 'from-violet-300 to-purple-300',
+    border: 'border-violet-500/30',
+    glow: 'shadow-violet-500/20',
+    cardBg: 'from-violet-800/90 via-violet-800/80 to-violet-900/90',
+    icon: '👑',
+    premiumOnly: true
+  },
+  'gradient-sunset': {
+    name: 'غروب الشمس',
+    gradient: 'from-orange-900 via-red-800 to-pink-900',
+    accent: 'bg-orange-600 hover:bg-orange-700',
+    text: 'text-orange-100',
+    textGradient: 'from-orange-300 to-pink-300',
+    border: 'border-orange-500/30',
+    glow: 'shadow-orange-500/20',
+    cardBg: 'from-orange-800/90 via-red-800/80 to-pink-900/90',
+    icon: '🌅',
+    premiumOnly: true
+  },
+  'gradient-emerald': {
+    name: 'الزمرد الثمين',
+    gradient: 'from-emerald-950 via-green-900 to-teal-950',
+    accent: 'bg-emerald-600 hover:bg-emerald-700',
+    text: 'text-emerald-100',
+    textGradient: 'from-emerald-300 to-teal-300',
+    border: 'border-emerald-500/30',
+    glow: 'shadow-emerald-500/20',
+    cardBg: 'from-emerald-800/90 via-green-800/80 to-teal-900/90',
+    icon: '💎',
+    premiumOnly: true
   },
   'gradient-sapphire': {
     name: 'الياقوت الأزرق',
@@ -86,7 +96,8 @@ export const themes = {
     border: 'border-blue-500/30',
     glow: 'shadow-blue-500/20',
     cardBg: 'from-blue-800/90 via-indigo-800/80 to-slate-900/90',
-    icon: '💠'
+    icon: '💠',
+    premiumOnly: true
   },
   'gradient-crimson': {
     name: 'القرمزي الجريء',
@@ -97,7 +108,8 @@ export const themes = {
     border: 'border-red-500/30',
     glow: 'shadow-red-500/20',
     cardBg: 'from-red-800/90 via-rose-800/80 to-pink-900/90',
-    icon: '🔥'
+    icon: '🔥',
+    premiumOnly: true
   },
   'gradient-aurora': {
     name: 'الشفق القطبي',
@@ -108,10 +120,33 @@ export const themes = {
     border: 'border-fuchsia-500/30',
     glow: 'shadow-fuchsia-500/20',
     cardBg: 'from-fuchsia-800/90 via-fuchsia-800/80 to-pink-900/90',
-    icon: '🌌'
+    icon: '🌌',
+    premiumOnly: true
   }
 }
 
 export const getTheme = (themeKey) => {
   return themes[themeKey] || themes['gradient-purple']
+}
+
+/**
+ * Get available themes based on subscription plan tier
+ * @param {string} planTier - 'standard' or 'premium'
+ * @returns {Object} Filtered themes object
+ */
+export const getAvailableThemes = (planTier = 'standard') => {
+  if (planTier === 'premium') {
+    // Premium users get all themes
+    return themes
+  }
+
+  // Standard users only get non-premium themes
+  const standardThemes = {}
+  Object.entries(themes).forEach(([key, theme]) => {
+    if (!theme.premiumOnly) {
+      standardThemes[key] = theme
+    }
+  })
+
+  return standardThemes
 }
