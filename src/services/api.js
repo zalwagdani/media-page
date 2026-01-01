@@ -128,6 +128,7 @@ export const saveProfile = async (profile, pageId = null) => {
     theme: profile.theme || 'gradient-purple',
     layout: profile.layout || 'classic',
     youtube_url: profile.youtube_url || null,
+    mawthooq_url: profile.mawthooq_url || null,
     social_media: profile.socialMedia || profile.social_media || {}
   }
 

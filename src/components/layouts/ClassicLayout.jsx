@@ -225,6 +225,33 @@ export default function ClassicLayout({
           </div>
         </div>
       )}
+
+      {/* Mawthooq Badge */}
+      {profile.mawthooq_url && (
+        <div className="mt-6 flex justify-center">
+          <a
+            href={profile.mawthooq_url.startsWith('http://') || profile.mawthooq_url.startsWith('https://') ? profile.mawthooq_url : `https://${profile.mawthooq_url}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex flex-col items-center gap-2 group"
+          >
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg ${
+              isDarkMode
+                ? 'bg-gradient-to-br from-green-600 to-emerald-600'
+                : 'bg-gradient-to-br from-green-500 to-emerald-500'
+            }`}>
+              <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 3.18l7 3.12v5.2c0 4.52-2.98 8.69-7 9.93-4.02-1.24-7-5.41-7-9.93V7.3l7-3.12zM10 17l-3.5-3.5 1.41-1.41L10 14.17l6.09-6.09L17.5 9.5 10 17z"/>
+              </svg>
+            </div>
+            <span className={`text-sm font-medium transition-colors ${
+              isDarkMode ? 'text-green-300 group-hover:text-green-200' : 'text-green-700 group-hover:text-green-600'
+            }`}>
+              ترخيص موثوق
+            </span>
+          </a>
+        </div>
+      )}
     </>
   )
 }

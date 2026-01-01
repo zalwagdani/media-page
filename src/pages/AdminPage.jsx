@@ -790,6 +790,19 @@ function AdminPage() {
                 <p className="text-xs text-gray-500 mt-1">💡 الصق رابط فيديو يوتيوب ليظهر مباشرة في صفحتك</p>
               </div>
 
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">✅ رابط رخصة موثوق (اختياري)</label>
+                <input
+                  type="text"
+                  value={profile.mawthooq_url || ''}
+                  onChange={(e) => handleProfileChange('mawthooq_url', e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                  placeholder="https://mawthooq.gmedia.gov.sa/license/xxxxxxxx"
+                  dir="ltr"
+                />
+                <p className="text-xs text-gray-500 mt-1">💡 رابط رخصتك من منصة موثوق - يظهر كبطاقة مميزة في صفحتك</p>
+              </div>
+
               {/* Theme & Layout */}
               <div>
                 <label className="block text-base sm:text-lg font-bold text-gray-800 mb-3 sm:mb-4">🎨 تصميم الصفحة</label>
