@@ -526,12 +526,17 @@ function AdminPage() {
           </div>
 
           {/* Brand Name */}
-          <h1 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-6">
+          <h1 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-4">
             Wasl.bio
           </h1>
 
+          {/* Welcome Text */}
+          <div className="text-2xl text-purple-200 mb-2">
+            نورت حسابك 👋
+          </div>
+
           {/* Loading Text */}
-          <div className="text-xl text-purple-200 mb-8">
+          <div className="text-lg text-purple-300 mb-8">
             جاري تحميل لوحة التحكم...
           </div>
 
