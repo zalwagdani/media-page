@@ -24,7 +24,6 @@ export const getPageId = () => {
   const pageIndex = pathParts.indexOf('page')
   if (pageIndex !== -1 && pageIndex < pathParts.length - 1) {
     const pageId = pathParts[pageIndex + 1]
-    console.log('✅ Page ID found in URL with /page/ prefix:', pageId)
     return pageId
   }
 
@@ -34,7 +33,6 @@ export const getPageId = () => {
     const firstPath = pathParts[0]
     // Ignore admin, login, and other system paths
     if (!['admin', 'login', 'media-page'].includes(firstPath)) {
-      console.log('✅ Page ID found in direct path:', firstPath)
       return firstPath
     }
   }
@@ -43,14 +41,12 @@ export const getPageId = () => {
   if (hostname.includes('.')) {
     const subdomain = hostname.split('.')[0]
     if (subdomain !== 'www' && subdomain !== 'localhost') {
-      console.log('✅ Page ID found in subdomain:', subdomain)
       return subdomain
     }
   }
 
   // Option 4: Default page ID (for single page setup or root domain)
   const defaultId = localStorage.getItem('pageId') || 'default'
-  console.log('⚠️ Using default page ID:', defaultId)
   return defaultId
 }
 

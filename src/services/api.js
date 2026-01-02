@@ -55,9 +55,7 @@ export const updatePage = async (pageId, updates) => {
  */
 export const getProfile = async (pageId = null) => {
   const currentPageId = pageId || getPageId()
-  
-  console.log('Fetching profile for page:', currentPageId)
-  
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -66,7 +64,6 @@ export const getProfile = async (pageId = null) => {
 
   if (error && error.code === 'PGRST116') {
     // Profile doesn't exist, return default (already in app format)
-    console.log('No profile found in database, returning defaults')
     return {
       data: {
         page_id: currentPageId,
@@ -106,7 +103,6 @@ export const getProfile = async (pageId = null) => {
     data._isDefault = false // Flag to indicate this is from database
   }
 
-  console.log('Profile loaded from database:', data)
   return { data, error: null, isDefault: false }
 }
 
@@ -115,9 +111,7 @@ export const getProfile = async (pageId = null) => {
  */
 export const saveProfile = async (profile, pageId = null) => {
   const currentPageId = pageId || getPageId()
-  
-  console.log('Saving profile for page:', currentPageId)
-  
+
   // Transform app format to database format
   const profileData = {
     page_id: currentPageId,
@@ -139,12 +133,9 @@ export const saveProfile = async (profile, pageId = null) => {
     .eq('page_id', currentPageId)
     .maybeSingle() // Use maybeSingle() instead of single() to avoid error if not found
 
-  console.log('Profile exists check:', { existing, checkError })
-
   let result
   if (existing && !checkError) {
     // Update existing
-    console.log('Updating existing profile')
     result = await supabase
       .from('profiles')
       .update(profileData)
@@ -153,15 +144,12 @@ export const saveProfile = async (profile, pageId = null) => {
       .single()
   } else {
     // Insert new
-    console.log('Inserting new profile')
     result = await supabase
       .from('profiles')
       .insert(profileData)
       .select()
       .single()
   }
-
-  console.log('Save result:', result)
 
   // Check for RLS policy errors and provide helpful message
   if (result.error) {
@@ -305,8 +293,6 @@ export const updateCode = async (codeId, updates, pageId = null) => {
  * Authenticate admin user
  */
 export const authenticateAdmin = async (email, password, pageId = null) => {
-  console.log('Authenticating admin, requested page:', pageId)
-  console.log('Email:', email)
 
   // Sign in with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -326,16 +312,12 @@ export const authenticateAdmin = async (email, password, pageId = null) => {
     return { success: false, error: errorMessage }
   }
 
-  console.log('Auth successful, user ID:', authData.user.id)
-
   // Get user's page from admins table
   const { data: adminData, error: adminError } = await supabase
     .from('admins')
     .select('page_id')
     .eq('user_id', authData.user.id)
     .single()
-
-  console.log('Admin data:', { adminData, adminError })
 
   if (adminError || !adminData) {
     await supabase.auth.signOut()
@@ -346,7 +328,6 @@ export const authenticateAdmin = async (email, password, pageId = null) => {
   }
 
   const userPageId = adminData.page_id
-  console.log('User is admin of page:', userPageId)
 
   // If a specific page was requested (not null), verify user has access to it
   if (pageId && pageId !== userPageId) {
@@ -362,7 +343,6 @@ export const authenticateAdmin = async (email, password, pageId = null) => {
   sessionStorage.setItem('admin_user_id', authData.user.id)
   sessionStorage.setItem('admin_page_id', userPageId)
 
-  console.log('Authentication successful! Page ID:', userPageId)
   return { success: true, user: authData.user, pageId: userPageId }
 }
 
@@ -483,7 +463,6 @@ export const uploadProfilePicture = async (file, pageId = null) => {
 
     // Delete old picture if it exists
     if (currentProfile?.picture_path) {
-      console.log('Deleting old picture:', currentProfile.picture_path)
       const { error: deleteError } = await supabase.storage
         .from('profile-pictures')
         .remove([currentProfile.picture_path])
@@ -630,7 +609,6 @@ export const isAnonymousMessagesEnabled = async (pageId = null) => {
 
   // If page doesn't exist or error, default to enabled
   if (error || !data) {
-    console.log('Anonymous messages enabled by default (page not found or error)')
     return { enabled: true, error: null }
   }
 

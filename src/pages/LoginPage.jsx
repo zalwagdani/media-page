@@ -14,8 +14,6 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      console.log('Attempting to sign in')
-
       // Sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
@@ -33,16 +31,12 @@ function LoginPage() {
         return
       }
 
-      console.log('Auth successful, getting user page...')
-
       // Get user's page from admins table
       const { data: adminData, error: adminError } = await supabase
         .from('admins')
         .select('page_id')
         .eq('user_id', authData.user.id)
         .single()
-
-      console.log('Admin data:', { adminData, adminError })
 
       if (adminError || !adminData) {
         // Sign out the user if they don't have a page
@@ -53,14 +47,11 @@ function LoginPage() {
       }
 
       const userPageId = adminData.page_id
-      console.log('User is admin of page:', userPageId)
 
       // Store admin session
       sessionStorage.setItem('admin_authenticated', 'true')
       sessionStorage.setItem('admin_user_id', authData.user.id)
       sessionStorage.setItem('admin_page_id', userPageId)
-
-      console.log('Auth successful, redirecting to:', `/${userPageId}/admin`)
 
       // Redirect to user's admin page
       window.location.href = `/${userPageId}/admin`

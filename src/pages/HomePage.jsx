@@ -138,15 +138,7 @@ function HomePage() {
       try {
         // Use route param if available, otherwise detect from URL
         const currentPageId = routePageId || getPageId()
-        console.log('=== HomePage Debug Info ===')
-        console.log('Route pageId (from React Router):', routePageId)
-        console.log('Detected pageId (from getPageId):', getPageId())
-        console.log('Final pageId being used:', currentPageId)
-        console.log('Current URL:', window.location.pathname)
-        console.log('Current hostname:', window.location.hostname)
-        console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL ? 'Configured' : 'NOT CONFIGURED')
-        console.log('=========================')
-        
+
         // Set default profile immediately to prevent white screen
         const defaultProfile = {
           name: 'سلم ال عباس',
@@ -200,10 +192,6 @@ function HomePage() {
             })
           ])
 
-          console.log('Profile result:', profileResult)
-          console.log('Codes result:', codesResult)
-          console.log('Social links result:', socialLinksResult)
-          
           if (profileResult.error) {
             console.error('Profile error:', profileResult.error)
             // Use default profile if there's an error
