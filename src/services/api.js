@@ -967,13 +967,16 @@ export const getPageViewsStats = async (pageId, days = 30) => {
 
 /**
  * Get link clicks statistics
+ * @param {string} pageId - Page ID
+ * @param {number} days - Number of days to get stats for (null = all time)
  */
-export const getLinkClicksStats = async (pageId) => {
+export const getLinkClicksStats = async (pageId, days = null) => {
   try {
     const currentPageId = pageId || getPageId()
 
     const { data, error } = await supabase.rpc('get_link_clicks_stats', {
-      p_page_id: currentPageId
+      p_page_id: currentPageId,
+      p_days: days
     })
 
     if (error) throw error

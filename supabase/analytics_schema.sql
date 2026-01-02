@@ -102,6 +102,7 @@ DROP FUNCTION IF EXISTS track_page_view(TEXT, TEXT, TEXT, TEXT);
 DROP FUNCTION IF EXISTS track_link_click(TEXT, UUID, TEXT, TEXT, TEXT);
 DROP FUNCTION IF EXISTS get_page_views_stats(TEXT, INTEGER);
 DROP FUNCTION IF EXISTS get_link_clicks_stats(TEXT);
+DROP FUNCTION IF EXISTS get_link_clicks_stats(TEXT, INTEGER);
 DROP FUNCTION IF EXISTS get_daily_views(TEXT, INTEGER);
 
 -- Function to track a page view (PREMIUM ONLY)
@@ -240,8 +241,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Get link click statistics
-CREATE OR REPLACE FUNCTION get_link_clicks_stats(p_page_id TEXT)
+-- Get link click statistics (with date range filter)
+CREATE OR REPLACE FUNCTION get_link_clicks_stats(p_page_id TEXT, p_days INTEGER DEFAULT NULL)
 RETURNS TABLE (
   link_id UUID,
   link_platform TEXT,
@@ -257,6 +258,7 @@ BEGIN
     MAX(dc.updated_at) as last_clicked_at
   FROM analytics_daily_clicks dc
   WHERE dc.page_id = p_page_id
+    AND (p_days IS NULL OR dc.click_date >= CURRENT_DATE - (p_days || ' days')::INTERVAL)
   GROUP BY dc.link_id, dc.link_platform
   ORDER BY total_clicks DESC;
 END;

@@ -130,7 +130,7 @@ function AdminPage() {
       try {
         const [statsResult, clicksResult, viewsResult] = await Promise.all([
           getPageViewsStats(currentPageId, analyticsDateRange),
-          getLinkClicksStats(currentPageId),
+          getLinkClicksStats(currentPageId, analyticsDateRange),
           getDailyViews(currentPageId, analyticsChartDays)
         ])
 
@@ -1319,7 +1319,7 @@ function AdminPage() {
                           <div className="text-3xl">{categoryIcons[msg.category]}</div>
                           <div className="flex-1">
                             <p className="text-sm text-gray-500 mb-2">
-                              {new Date(msg.created_at).toLocaleString('ar-SA')}
+                              {new Date(msg.created_at).toLocaleString('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}
                             </p>
                             <p className="text-gray-800 text-lg leading-relaxed">{msg.message}</p>
                           </div>
@@ -1522,7 +1522,7 @@ function AdminPage() {
                         return (
                           <div key={index} className="flex items-center gap-3">
                             <div className="text-sm text-gray-600 w-24 text-right">
-                              {new Date(day.view_date).toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' })}
+                              {new Date(day.view_date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
                             </div>
                             <div className="flex-1 h-10 bg-gray-100 rounded-lg overflow-hidden relative">
                               <div
@@ -1569,7 +1569,7 @@ function AdminPage() {
                             <div>
                               <div className="font-bold text-gray-800">{link.link_platform}</div>
                               <div className="text-xs text-gray-500">
-                                {link.last_clicked_at ? `آخر نقرة: ${new Date(link.last_clicked_at).toLocaleDateString('ar-SA')}` : 'لا توجد نقرات'}
+                                {link.last_clicked_at ? `آخر نقرة: ${new Date(link.last_clicked_at).toLocaleDateString('en-GB')}` : 'لا توجد نقرات'}
                               </div>
                             </div>
                           </div>
