@@ -511,6 +511,41 @@ function AdminPage() {
     return `${window.location.protocol}//${window.location.host}${currentPath || '/'}`
   }
 
+  // Loading Screen
+  if (loading || subscriptionLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-pink-900 flex items-center justify-center">
+        <div className="text-center">
+          {/* Logo */}
+          <div className="inline-block mb-8 animate-bounce">
+            <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Brand Name */}
+          <h1 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-6">
+            Wasl.bio
+          </h1>
+
+          {/* Loading Text */}
+          <div className="text-xl text-purple-200 mb-8">
+            جاري تحميل لوحة التحكم...
+          </div>
+
+          {/* Loading Spinner */}
+          <div className="flex justify-center gap-2">
+            <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
       {/* Modern Header */}

@@ -389,18 +389,42 @@ function HomePage() {
     return <PageNotFoundPage />
   }
 
-  // Show loading state only if we don't have a profile yet
-  if (loading && !profile) {
+  // Show loading state - Professional loading screen with logo and user info
+  if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-pink-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl sm:text-7xl mb-6 animate-bounce">✨</div>
-          <div className={`text-xl sm:text-2xl font-bold mb-3 transition-colors duration-300 bg-gradient-to-r ${
-            isDarkMode
-              ? 'text-transparent bg-clip-text from-purple-300 to-pink-300'
-              : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
-          }`}>جاري التحميل...</div>
-          <div className={`text-base sm:text-lg transition-colors duration-300 ${isDarkMode ? 'text-purple-200' : 'text-purple-600'}`}>يرجى الانتظار قليلاً 🎈</div>
+          {/* Logo */}
+          <div className="inline-block mb-8 animate-bounce">
+            <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+          </div>
+
+          {/* User Name or Wasl.bio */}
+          {profile && profile.name ? (
+            <h1 className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-8">
+              {profile.name}
+            </h1>
+          ) : (
+            <h1 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-8">
+              Wasl.bio
+            </h1>
+          )}
+
+          {/* Loading Text */}
+          <div className="text-xl text-purple-200 mb-8">
+            جاري التحميل...
+          </div>
+
+          {/* Loading Spinner */}
+          <div className="flex justify-center gap-2">
+            <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
         </div>
       </div>
     )
@@ -433,18 +457,36 @@ function HomePage() {
     )
   }
 
-  // If there's no profile after loading, use fallback (shouldn't happen due to useEffect)
+  // If there's no profile after loading, show loading screen (shouldn't happen due to useEffect)
   if (!profile) {
     return (
-      <div className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-gradient-to-br from-indigo-950 via-purple-900 to-gray-900' : 'bg-gradient-to-br from-pink-50 via-blue-50 to-purple-50'}`}>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-pink-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl sm:text-7xl mb-6 animate-bounce">✨</div>
-          <div className={`text-xl sm:text-2xl font-bold mb-3 transition-colors duration-300 bg-gradient-to-r ${
-            isDarkMode 
-              ? 'text-transparent bg-clip-text from-purple-300 to-pink-300' 
-              : 'text-transparent bg-clip-text from-pink-500 to-purple-500'
-          }`}>جاري التحميل...</div>
-          <div className={`text-base sm:text-lg transition-colors duration-300 ${isDarkMode ? 'text-purple-200' : 'text-purple-600'}`}>يرجى الانتظار قليلاً 🎈</div>
+          {/* Logo */}
+          <div className="inline-block mb-8 animate-bounce">
+            <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Brand Name */}
+          <h1 className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-300 to-indigo-300 mb-8">
+            Wasl.bio
+          </h1>
+
+          {/* Loading Text */}
+          <div className="text-xl text-purple-200 mb-8">
+            جاري التحميل...
+          </div>
+
+          {/* Loading Spinner */}
+          <div className="flex justify-center gap-2">
+            <div className="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+            <div className="w-3 h-3 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-3 h-3 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+          </div>
         </div>
       </div>
     )
